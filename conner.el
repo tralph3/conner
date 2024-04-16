@@ -29,22 +29,51 @@
       (write-file conner-file))))
 
 (defun conner-run-project-command (&optional project)
+  "Project aware variant of `conner-run-command'. Will use
+PROJECT's root dir as an argument for the corresponding function.
+
+If no PROJECT is provided, it will use the value of
+`project-current'. If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-run-command (project-root project))))
 
 (defun conner-add-project-command (&optional project)
+  "Project aware variant of `conner-add-command'. Will use
+PROJECT's root dir as an argument for the corresponding function.
+
+If no PROJECT is provided, it will use the value of
+`project-current'. If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-add-command (project-root project))))
 
 (defun conner-delete-project-command (&optional project)
+  "Project aware variant of `conner-delete-command'. Will use
+PROJECT's root dir as an argument for the corresponding function.
+
+If no PROJECT is provided, it will use the value of
+`project-current'. If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-delete-command (project-root project))))
 
 (defun conner-update-project-command (&optional project)
+  "Project aware variant of `conner-update-command'. Will use
+PROJECT's root dir as an argument for the corresponding function.
+
+If no PROJECT is provided, it will use the value of
+`project-current'. If nil, it will prompt the user."
+  (interactive)
+  (let ((project (or project (project-current t))))
+    (conner-update-command (project-root project))))
+
 (defun conner-run-command (root-dir &optional command-name)
+  "Runs command COMMAND-NAME from ROOT-DIR's
+`conner-file-name'. The user will be prompted for every optional
+parameter not specified.
+
+The command will be ran in ROOT-DIR."
   (interactive "D")
   (conner--read-commands root-dir)
   (let* ((names (mapcar #'car conner--commands))
@@ -54,6 +83,9 @@
     (compile command)))
 
 (defun conner-add-command (root-dir &optional command-name command)
+  "Adds command COMMAND-NAME with value COMMAND to ROOT-DIR's
+`conner-file-name'. The user will be prompted for every optional
+parameter not specified."
   (interactive "D")
   (conner--read-commands root-dir)
   (let ((command-name (or command-name (read-string "Enter command name: ")))
@@ -64,6 +96,9 @@
              (conner--write-commands root-dir)))))
 
 (defun conner-delete-command (root-dir &optional command-name)
+  "Deletes command COMMAND-NAME from ROOT-DIR's
+`conner-file-name'. The user will be prompted for every optional
+parameter not specified."
   (interactive "D")
   (conner--read-commands root-dir)
   (let* ((names (mapcar #'car conner--commands))
@@ -73,6 +108,12 @@
     (conner--write-commands root-dir)))
 
 (defun conner-update-command (root-dir &optional command-name new-name new-command)
+  "Updates command COMMAND-NAME from ROOT-DIR's `conner-file-name'
+to NEW-NAME and NEW-COMMAND. The user will be prompted for every
+optional parameter not specified.
+
+If a non-existent COMMAND-NAME is provided, it will be created
+instead."
   (interactive "D")
   (conner--read-commands root-dir)
   (let* ((names (mapcar #'car conner--commands))
