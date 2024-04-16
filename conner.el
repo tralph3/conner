@@ -57,8 +57,10 @@
   (conner--read-commands root-dir)
   (let ((command-name (read-string "Enter command name: "))
         (command (read-string "Enter command: ")))
-    (add-to-list 'conner--commands `(,command-name . ,command))
-    (conner--write-commands root-dir)))
+    (if (assoc command-name conner--commands)
+        (warn "A command with this name already exists")
+      (progn (add-to-list 'conner--commands `(,command-name . ,command))
+             (conner--write-commands root-dir)))))
 
 (defun conner-delete-command (root-dir)
   (interactive "D")
