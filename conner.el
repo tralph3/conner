@@ -196,7 +196,7 @@ parameter not specified."
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Delete command: " names)))
          (element (assoc command-name conner--commands)))
-    (setq-local conner--commands (delete element conner--commands))
+    (setq conner--commands (delete element conner--commands))
     (conner--write-commands root-dir)))
 
 (defun conner-update-command (root-dir &optional command-name new-name new-command)
