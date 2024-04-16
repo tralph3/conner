@@ -71,6 +71,17 @@
     (setq-local conner--commands (delete element conner--commands))
     (conner--write-commands root-dir)))
 
+(defun conner-update-command (root-dir &optional command-name new-name new-command)
+  (interactive "D")
+  (conner--read-commands root-dir)
+  (let* ((names (mapcar #'car conner--commands))
+         (command-name (or command-name (completing-read "Update command: " names)))
+         (command (cdr (assoc command-name conner--commands)))
+         (new-name (or new-name (read-string "Enter new name: " command-name)))
+         (new-command (or new-command (read-string "Enter new command: " command))))
+    (conner-delete-command root-dir command-name)
+    (conner-add-command root-dir new-name new-command)))
+
 
 (provide 'conner)
 
