@@ -68,8 +68,8 @@
   (conner--read-commands root-dir)
   (let* ((names (mapcar #'car conner--commands))
          (command-name (completing-read "Delete command: " names))
-         (command (cdr (assoc command-name conner--commands))))
-    (delete `(,command-name . ,command) conner--commands)
+         (element (assoc command-name conner--commands)))
+    (setq-local conner--commands (delete element conner--commands))
     (conner--write-commands root-dir)))
 
 
