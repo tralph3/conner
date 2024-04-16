@@ -11,15 +11,16 @@
 (defvar conner-file-name ".conner"
   "Filename where the launch commands will be defined.")
 
-(setq-local conner--commands nil)
+(setq conner--commands nil)
+
 
 (defun conner--read-commands (root-dir)
   (let ((conner-file (file-name-concat root-dir conner-file-name)))
-    (setq-local conner--commands
-                (when (file-exists-p conner-file)
-                  (with-temp-buffer
-                    (insert-file-contents conner-file)
-                    (read (current-buffer)))))))
+    (setq conner--commands
+          (when (file-exists-p conner-file)
+            (with-temp-buffer
+              (insert-file-contents conner-file)
+              (read (current-buffer)))))))
 
 (defun conner--write-commands (root-dir)
   (let ((conner-file (file-name-concat root-dir conner-file-name))
