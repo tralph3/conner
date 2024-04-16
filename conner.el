@@ -7,14 +7,59 @@
 ;; Homepage: https://github.com/tralph3/conner
 ;; Keywords: tools
 
+;;; Commentary:
+
+;; Conner is a Command Runner. Define your commands in a .conner file
+;; and execute them in your project.
+;;
+;; NOTE: The source code for the loading of environment variables is
+;; taken straight out of diasjorge's load-env-vars
+;; https://github.com/diasjorge/emacs-load-env-vars. I didn't want to
+;; include it as a dependency due to its small size, and needing some
+;; modification in order to fit this package's purposes.
+
+;;; Code:
+
+(defvar conner--env-var-regexp
+  (rx
+   line-start
+   (0+ space)
+   (optional "export" (0+ space)) ;; optional export
+   (group (1+ (in "_" alnum))) ;; key
+   (or
+    (and (0+ space) "=" (0+ space))
+    (and ":" (1+ space))) ;; separator
+   (or
+    (and "'" (group (0+ (or "\\'" (not (any "'"))))) "'") ;; single quoted value
+    (and ?\" (group (0+ (or "\\\"" (not (any "\""))))) ?\") ;; double quoted value
+    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value
+    )
+   (0+ space)
+   (optional "#" (0+ any))
+   )
+  "Regexp to match env vars in file."
+  )
 
 (defvar conner-file-name ".conner"
   "Filename where the launch commands will be defined.")
 
-(setq conner--commands nil)
+(defvar conner-env-file ".env"
+  "Filename where env variables are defined.")
 
+(defvar conner-read-env-file t
+  "If non-nil, conner will look for a `conner-env-file' in the
+provided root dir and load any environment variables within,
+passing them to every command when called.
+
+This will not modify `process-environment'. The changes will only
+apply and be visible to conner commands.")
+
+(defvar conner--commands nil
+  "List of commands of the last `conner-file-name' file read.")
 
 (defun conner--read-commands (root-dir)
+  "Reads the contents of ROOT-DIR's `conner-file-name' file into
+`conner--commands'."
   (let ((conner-file (file-name-concat root-dir conner-file-name)))
     (setq conner--commands
           (when (file-exists-p conner-file)
@@ -23,13 +68,47 @@
               (read (current-buffer)))))))
 
 (defun conner--write-commands (root-dir)
+  "Writes the contents of `conner--commands' to ROOT-DIR's
+`conner-file-name' file."
   (let ((conner-file (file-name-concat root-dir conner-file-name))
         (commands conner--commands))
     (with-temp-buffer
       (insert (pp commands))
       (write-file conner-file))))
 
+(defun conner--read-env-file (root-dir)
+  "Reads the `conner-env-file' located in ROOT-DIR and returns a
+list of strings formatted for use in `process-environment'."
+  (setq-local conner--env-var-list nil)
+  (let* ((env-file (file-name-concat root-dir conner-env-file))
+         (env-vars (conner--load-env-vars env-file)))
+    (dolist (element env-vars)
+      (let ((key (car element))
+            (value (cadr element)))
+        (add-to-list 'conner--env-var-list (concat key "=" value))))
+    conner--env-var-list))
+
+(defun conner--get-env-vars-in-buffer (regexp)
+  "Get a list of all REGEXP matches in a buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (save-match-data
+      (let (matches)
+        (while (re-search-forward regexp nil t)
+          (push (list (match-string-no-properties 1) (or (match-string-no-properties 2) (match-string-no-properties 3) (match-string-no-properties 4))) matches))
+        matches))))
+
+(defun conner--load-env-vars (env-file-path)
+  "Load environment variables found in ENV-FILE-PATH. Returns a
+ list containing the results."
+  (with-temp-buffer
+    (when (file-exists-p env-file-path)
+      (insert-file-contents env-file-path))
+    (conner--get-env-vars-in-buffer conner--env-var-regexp)))
+
 (defun conner--annotation-function (candidate)
+  "Reads the associated command for CANDIDATE and formats the string
+for use in the minibuffer annotations."
   (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner--commands))))
          (indent (make-string (- max-width (length candidate)) ?\s))
          (command (cdr (assoc candidate conner--commands)))
@@ -81,10 +160,16 @@ If no PROJECT is provided, it will use the value of
 `conner-file-name'. The user will be prompted for every optional
 parameter not specified.
 
-The command will be ran in ROOT-DIR."
+The command will be ran in ROOT-DIR.
+
+If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
+`conner-env-file' before executing the command."
   (interactive "D")
   (conner--read-commands root-dir)
   (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
+         (process-environment (if conner-read-env-file
+                                  (append (conner--read-env-file root-dir) process-environment)
+                                process-environment))
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Select a command: " names)))
          (command (cdr (assoc command-name conner--commands)))
