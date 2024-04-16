@@ -32,13 +32,10 @@
    (or
     (and "'" (group (0+ (or "\\'" (not (any "'"))))) "'") ;; single quoted value
     (and ?\" (group (0+ (or "\\\"" (not (any "\""))))) ?\") ;; double quoted value
-    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value
-    )
-   (0+ space)
-   (optional "#" (0+ any))
-   )
-  "Regexp to match env vars in file."
-  )
+    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value)
+    (0+ space)
+    (optional "#" (0+ any))))
+  "Regexp to match env vars in file.")
 
 (defvar conner-file-name ".conner"
   "Filename where the launch commands will be defined.")
