@@ -1,4 +1,4 @@
-;;; conner.el --- define and run project specific commands  -*- lexical-binding:t -*-
+;;; conner.el --- define and run project specific commands  -*- lexical-binding: t -*-
 
 ;; Authors: Tomás Ralph <tomasralph2000@gmail.com>
 ;; Created: 2024
@@ -35,6 +35,28 @@
 
 ;;; Code:
 
+(defgroup conner nil
+  "Conner is a Command Runner for GNU Emacs."
+  :link '(url-link :tag "Homepage" "https://github.com/tralph3/conner")
+  :prefix "conner-")
+
+(defcustom conner-file-name ".conner"
+  "Filename where the launch commands will be defined."
+  :type 'string)
+
+(defcustom conner-env-file ".env"
+  "Filename where env variables are defined."
+  :type 'string)
+
+(defcustom conner-read-env-file t
+  "If non-nil, conner will look for a `conner-env-file' in the
+provided root dir and load any environment variables within,
+passing them to every command when called.
+
+This will not modify `process-environment'. The changes will only
+apply and be visible to conner commands."
+  :type 'boolean)
+
 (defvar conner--env-var-regexp
   (rx
    line-start
@@ -47,24 +69,10 @@
    (or
     (and "'" (group (0+ (or "\\'" (not (any "'"))))) "'") ;; single quoted value
     (and ?\" (group (0+ (or "\\\"" (not (any "\""))))) ?\") ;; double quoted value
-    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value)
+    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value
     (0+ space)
     (optional "#" (0+ any))))
   "Regexp to match env vars in file.")
-
-(defvar conner-file-name ".conner"
-  "Filename where the launch commands will be defined.")
-
-(defvar conner-env-file ".env"
-  "Filename where env variables are defined.")
-
-(defvar conner-read-env-file t
-  "If non-nil, conner will look for a `conner-env-file' in the
-provided root dir and load any environment variables within,
-passing them to every command when called.
-
-This will not modify `process-environment'. The changes will only
-apply and be visible to conner commands.")
 
 (defvar conner--commands nil
   "List of commands of the last `conner-file-name' file read.")
