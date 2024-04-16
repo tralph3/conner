@@ -30,21 +30,18 @@
 
 (defun conner-run-project-command (&optional project)
   (interactive)
-  (unless project
-    (setq-local project (project-current t)))
-  (conner-run-command (project-root project)))
+  (let ((project (or project (project-current t))))
+    (conner-run-command (project-root project))))
 
 (defun conner-add-project-command (&optional project)
   (interactive)
-  (unless project
-    (setq-local project (project-current t)))
-  (conner-add-command (project-root project)))
+  (let ((project (or project (project-current t))))
+    (conner-add-command (project-root project))))
 
 (defun conner-delete-project-command (&optional project)
   (interactive)
-  (unless project
-    (setq-local project (project-current t)))
-  (conner-delete-command (project-root project)))
+  (let ((project (or project (project-current t))))
+    (conner-delete-command (project-root project))))
 
 (defun conner-run-command (root-dir)
   (interactive "D")
