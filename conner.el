@@ -29,6 +29,13 @@
       (insert (pp commands))
       (write-file conner-file))))
 
+(defun conner--annotation-function (candidate)
+  (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner--commands))))
+         (indent (make-string (- max-width (length candidate)) ?\s))
+         (command (cdr (assoc candidate conner--commands)))
+         (tabs (make-string 6 ?\t)))
+    (format "%s%s%s" indent tabs command)))
+
 (defun conner-run-project-command (&optional project)
   "Project aware variant of `conner-run-command'. Will use
 PROJECT's root dir as an argument for the corresponding function.
@@ -77,7 +84,8 @@ parameter not specified.
 The command will be ran in ROOT-DIR."
   (interactive "D")
   (conner--read-commands root-dir)
-  (let* ((names (mapcar #'car conner--commands))
+  (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
+         (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Select a command: " names)))
          (command (cdr (assoc command-name conner--commands)))
          (default-directory root-dir))
@@ -102,7 +110,8 @@ parameter not specified."
 parameter not specified."
   (interactive "D")
   (conner--read-commands root-dir)
-  (let* ((names (mapcar #'car conner--commands))
+  (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
+         (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Delete command: " names)))
          (element (assoc command-name conner--commands)))
     (setq-local conner--commands (delete element conner--commands))
@@ -117,7 +126,8 @@ If a non-existent COMMAND-NAME is provided, it will be created
 instead."
   (interactive "D")
   (conner--read-commands root-dir)
-  (let* ((names (mapcar #'car conner--commands))
+  (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
+         (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Update command: " names)))
          (command (cdr (assoc command-name conner--commands)))
          (new-name (or new-name (read-string "Enter new name: " command-name)))
