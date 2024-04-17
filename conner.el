@@ -24,14 +24,31 @@
 
 ;;; Commentary:
 
-;; Conner is a Command Runner. Define your commands in a .conner file
-;; and execute them in your project.
+;; Conner is a Command Runner for GNU Emacs.
 ;;
-;; NOTE: The source code for the loading of environment variables is
-;; taken straight out of diasjorge's load-env-vars
-;; https://github.com/diasjorge/emacs-load-env-vars. I didn't want to
-;; include it as a dependency due to its small size, and needing some
-;; modification in order to fit this package's purposes.
+;; Conner allows you to define arbitrary commands for each of your
+;; projects. Every project could have a different way to compile it,
+;; to run it, to test it, to prettify it, to watch for changes, to
+;; debug it, to install it, or any other thing. With conner, you can
+;; define a command for each of these actions, or any other you want.
+;;
+;; Commands are defined in the conner file, by default called .conner,
+;; situated at the root of your project. Inside it, you'll find a lisp
+;; object that contains a list of command names, and the commands
+;; themselves.
+;;
+;; Conner also provides a multitude of functions to add, delete,
+;; update, and of course, run these commands from within emacs. It
+;; integrates with project.el, so you can run these commands on
+;; arbitrary folders, or have it automatically detect the current
+;; project's root.
+;;
+;; Additionally, conner also has support for .env files. By default,
+;; conner will look in the root directory of your project for a .env
+;; file and load any environment variables found within. These
+;; variables are then accessible to conner commands, and won't pollute
+;; the regular emacs session.
+
 
 ;;; Code:
 
