@@ -27,27 +27,27 @@
 ;; Conner is a Command Runner for GNU Emacs.
 ;;
 ;; Conner allows you to define arbitrary commands for each of your
-;; projects. Every project could have a different way to compile it,
+;; projects.  Every project could have a different way to compile it,
 ;; to run it, to test it, to prettify it, to watch for changes, to
-;; debug it, to install it, or any other thing. With conner, you can
+;; debug it, to install it, or any other thing.  With conner, you can
 ;; define a command for each of these actions, or any other you want.
 ;;
 ;; Commands are defined in the conner file, by default called .conner,
-;; situated at the root of your project. Inside it, you'll find a lisp
+;; situated at the root of your project.  Inside it, you'll find a Lisp
 ;; object that contains a list of command names, and the commands
 ;; themselves.
 ;;
 ;; Conner also provides a multitude of functions to add, delete,
-;; update, and of course, run these commands from within emacs. It
+;; update, and of course, run these commands from within Emacs.  It
 ;; integrates with project.el, so you can run these commands on
 ;; arbitrary folders, or have it automatically detect the current
 ;; project's root.
 ;;
-;; Additionally, conner also has support for .env files. By default,
+;; Additionally, conner also has support for .env files.  By default,
 ;; conner will look in the root directory of your project for a .env
-;; file and load any environment variables found within. These
+;; file and load any environment variables found within.  These
 ;; variables are then accessible to conner commands, and won't pollute
-;; the regular emacs session.
+;; the regular Emacs session.
 
 
 ;;; Code:
@@ -67,11 +67,13 @@
   :type 'string)
 
 (defcustom conner-read-env-file t
-  "If non-nil, conner will look for a `conner-env-file' in the
-provided root dir and load any environment variables within,
-passing them to every command when called.
+  "Wether to read env files before running commands.
 
-This will not modify `process-environment'. The changes will only
+If non-nil, conner will look for a `conner-env-file' in the provided
+root dir and load any environment variables within, passing them to
+every command when called.
+
+This will not modify `process-environment'.  The changes will only
 apply and be visible to conner commands."
   :type 'boolean)
 
@@ -96,17 +98,17 @@ apply and be visible to conner commands."
   "List of commands of the last `conner-file-name' file read.")
 
 (defvar conner--current-command nil
-  "The name of the command currently being executed. Does not get
-reset after the command finishes.")
+  "The name of the command currently being executed.
+Does not get reset after the command finishes.")
 
 (defun conner--make-compilation-buffer-name (_)
+  "Create the buffer name based on `conner--current-command'."
   (concat "*conner-compilation-" conner--current-command "*"))
 
 (setq-local compilation-buffer-name-function #'conner--make-compilation-buffer-name)
 
 (defun conner--read-commands (root-dir)
-  "Reads the contents of ROOT-DIR's `conner-file-name' file into
-`conner--commands'."
+  "Read the contents of ROOT-DIR's `conner-file-name' file into `conner--commands'."
   (let ((conner-file (file-name-concat root-dir conner-file-name)))
     (setq conner--commands
           (when (file-exists-p conner-file)
@@ -115,8 +117,7 @@ reset after the command finishes.")
               (read (current-buffer)))))))
 
 (defun conner--write-commands (root-dir)
-  "Writes the contents of `conner--commands' to ROOT-DIR's
-`conner-file-name' file."
+  "Write the contents of `conner--commands' to ROOT-DIR's `conner-file-name' file."
   (let ((conner-file (file-name-concat root-dir conner-file-name))
         (commands conner--commands))
     (with-temp-buffer
@@ -124,8 +125,7 @@ reset after the command finishes.")
       (write-file conner-file))))
 
 (defun conner--read-env-file (root-dir)
-  "Reads the `conner-env-file' located in ROOT-DIR and returns a
-list of strings formatted for use in `process-environment'."
+  "Read ROOT-DIR's `conner-env-file' and return a list of strings."
   (setq-local conner--env-var-list nil)
   (let* ((env-file (file-name-concat root-dir conner-env-file))
          (env-vars (conner--load-env-vars env-file)))
@@ -146,16 +146,14 @@ list of strings formatted for use in `process-environment'."
         matches))))
 
 (defun conner--load-env-vars (env-file-path)
-  "Load environment variables found in ENV-FILE-PATH. Returns a
- list containing the results."
+  "Read env vars in ENV-FILE-PATH.  Return list."
   (with-temp-buffer
     (when (file-exists-p env-file-path)
       (insert-file-contents env-file-path))
     (conner--get-env-vars-in-buffer conner--env-var-regexp)))
 
 (defun conner--annotation-function (candidate)
-  "Reads the associated command for CANDIDATE and formats the string
-for use in the minibuffer annotations."
+  "Get CANDIDATE's command and format for use in minibuffer annotation."
   (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner--commands))))
          (indent (make-string (- max-width (length candidate)) ?\s))
          (command (cdr (assoc candidate conner--commands)))
@@ -163,49 +161,58 @@ for use in the minibuffer annotations."
     (format "%s%s%s" indent tabs command)))
 
 (defun conner-run-project-command (&optional project)
-  "Project aware variant of `conner-run-command'. Will use
-PROJECT's root dir as an argument for the corresponding function.
+  "Project aware variant of `conner-run-command'.
+
+Will use PROJECT's root dir as an argument for the corresponding
+function.
 
 If no PROJECT is provided, it will use the value of
-`project-current'. If nil, it will prompt the user."
+`project-current'.  If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-run-command (project-root project))))
 
 (defun conner-add-project-command (&optional project)
-  "Project aware variant of `conner-add-command'. Will use
-PROJECT's root dir as an argument for the corresponding function.
+  "Project aware variant of `conner-add-command'.
+
+Will use PROJECT's root dir as an argument for the corresponding
+function.
 
 If no PROJECT is provided, it will use the value of
-`project-current'. If nil, it will prompt the user."
+`project-current'.  If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-add-command (project-root project))))
 
 (defun conner-delete-project-command (&optional project)
-  "Project aware variant of `conner-delete-command'. Will use
-PROJECT's root dir as an argument for the corresponding function.
+  "Project aware variant of `conner-delete-command'.
+
+Will use PROJECT's root dir as an argument for the corresponding
+function.
 
 If no PROJECT is provided, it will use the value of
-`project-current'. If nil, it will prompt the user."
+`project-current'.  If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-delete-command (project-root project))))
 
 (defun conner-update-project-command (&optional project)
-  "Project aware variant of `conner-update-command'. Will use
-PROJECT's root dir as an argument for the corresponding function.
+  "Project aware variant of `conner-update-command'.
+
+Will use PROJECT's root dir as an argument for the corresponding
+function.
 
 If no PROJECT is provided, it will use the value of
-`project-current'. If nil, it will prompt the user."
+`project-current'.  If nil, it will prompt the user."
   (interactive)
   (let ((project (or project (project-current t))))
     (conner-update-command (project-root project))))
 
 (defun conner-run-command (root-dir &optional command-name)
-  "Runs command COMMAND-NAME from ROOT-DIR's
-`conner-file-name'. The user will be prompted for every optional
-parameter not specified.
+  "Run command COMMAND-NAME from ROOT-DIR's `conner-file-name'.
+
+The user will be prompted for every optional parameter not
+specified.
 
 The command will be ran in ROOT-DIR.
 
@@ -225,9 +232,10 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
     (compile command)))
 
 (defun conner-add-command (root-dir &optional command-name command)
-  "Adds command COMMAND-NAME with value COMMAND to ROOT-DIR's
-`conner-file-name'. The user will be prompted for every optional
-parameter not specified."
+  "Add command COMMAND-NAME with value COMMAND to ROOT-DIR's `conner-file-name'.
+
+The user will be prompted for every optional parameter not
+specified."
   (interactive "D")
   (conner--read-commands root-dir)
   (let ((command-name (or command-name (read-string "Enter command name: ")))
@@ -238,9 +246,10 @@ parameter not specified."
              (conner--write-commands root-dir)))))
 
 (defun conner-delete-command (root-dir &optional command-name)
-  "Deletes command COMMAND-NAME from ROOT-DIR's
-`conner-file-name'. The user will be prompted for every optional
-parameter not specified."
+  "Delete command COMMAND-NAME from ROOT-DIR's `conner-file-name'.
+
+The user will be prompted for every optional parameter not
+specified."
   (interactive "D")
   (conner--read-commands root-dir)
   (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
@@ -251,9 +260,12 @@ parameter not specified."
     (conner--write-commands root-dir)))
 
 (defun conner-update-command (root-dir &optional command-name new-name new-command)
-  "Updates command COMMAND-NAME from ROOT-DIR's `conner-file-name'
-to NEW-NAME and NEW-COMMAND. The user will be prompted for every
-optional parameter not specified.
+  "Update command COMMAND-NAME to NEW-NAME and NEW-COMMAND.
+
+Command will be read from ROOT-DIR's `conner-file-name'.
+
+The user will be prompted for every optional parameter not
+specified.
 
 If a non-existent COMMAND-NAME is provided, it will be created
 instead."
