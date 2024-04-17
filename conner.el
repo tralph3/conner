@@ -1,9 +1,9 @@
-;;; conner.el --- define and run project specific commands  -*- lexical-binding: t -*-
+;;; conner.el --- Define and run project specific commands  -*- lexical-binding: t -*-
 
 ;; Authors: Tomás Ralph <tomasralph2000@gmail.com>
 ;; Created: 2024
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "28.1"))
 ;; Homepage: https://github.com/tralph3/conner
 ;; Keywords: tools
 
@@ -38,6 +38,7 @@
 (defgroup conner nil
   "Conner is a Command Runner for GNU Emacs."
   :link '(url-link :tag "Homepage" "https://github.com/tralph3/conner")
+  :group 'development
   :prefix "conner-")
 
 (defcustom conner-file-name ".conner"
