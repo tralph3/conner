@@ -77,6 +77,15 @@ apply and be visible to conner commands."
 (defvar conner--commands nil
   "List of commands of the last `conner-file-name' file read.")
 
+(defvar conner--current-command nil
+  "The name of the command currently being executed. Does not get
+reset after the command finishes.")
+
+(defun conner--make-compilation-buffer-name (_)
+  (concat "*conner-compilation-" conner--current-command "*"))
+
+(setq-local compilation-buffer-name-function #'conner--make-compilation-buffer-name)
+
 (defun conner--read-commands (root-dir)
   "Reads the contents of ROOT-DIR's `conner-file-name' file into
 `conner--commands'."
@@ -194,6 +203,7 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
          (command-name (or command-name (completing-read "Select a command: " names)))
          (command (cdr (assoc command-name conner--commands)))
          (default-directory root-dir))
+    (setq conner--current-command command-name)
     (compile command)))
 
 (defun conner-add-command (root-dir &optional command-name command)
