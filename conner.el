@@ -2,7 +2,7 @@
 
 ;; Authors: Tomás Ralph <tomasralph2000@gmail.com>
 ;; Created: 2024
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: ((emacs "28.1"))
 ;; Homepage: https://github.com/tralph3/conner
 ;; Keywords: tools
@@ -77,6 +77,20 @@ This will not modify `process-environment'.  The changes will only
 apply and be visible to conner commands."
   :type 'boolean)
 
+(defcustom conner-default-file-behavior 'project
+  "Where should conner operate by default.
+
+If set to 'project', conner will read, write and update commands
+defined in the `conner-file-name' of the directory by
+default.  You would need to pass \\[universal-argument] to these
+functions to have them operate on the associated local file.
+
+If set to 'local', the inverse is true.  It will operate on the
+local file by default, and you will need to pass
+\\[universal-argument] to have it operate on the project file."
+  :type '(choice (const :tag "Project file" project)
+                 (const :tag "Local file" local)))
+
 (defvar conner--env-var-regexp
   (rx
    line-start
@@ -101,27 +115,66 @@ apply and be visible to conner commands."
   "The name of the command currently being executed.
 Does not get reset after the command finishes.")
 
+(setq-local compilation-buffer-name-function #'conner--make-compilation-buffer-name)
+
 (defun conner--make-compilation-buffer-name (_)
   "Create the buffer name based on `conner--current-command'."
   (concat "*conner-compilation-" conner--current-command "*"))
 
-(setq-local compilation-buffer-name-function #'conner--make-compilation-buffer-name)
+(defun conner--construct-file-path (root-dir)
+  "Return the path to ROOT-DIR's `conner-file-name'."
+  (file-name-concat (expand-file-name root-dir) conner-file-name))
 
-(defun conner--read-commands (root-dir)
-  "Read the contents of ROOT-DIR's `conner-file-name' file into `conner--commands'."
-  (let ((conner-file (file-name-concat root-dir conner-file-name)))
-    (setq conner--commands
-          (when (file-exists-p conner-file)
-            (with-temp-buffer
-              (insert-file-contents conner-file)
-              (read (current-buffer)))))))
+(defun conner--construct-local-file-path (root-dir)
+  "Return the path to the local conner file associated with ROOT-DIR."
+  (let* ((backup-directory-alist `(,`("." . ,(file-name-concat user-emacs-directory "conner"))))
+	     (name (make-backup-file-name-1 (expand-file-name root-dir))))
+    (concat name ".#conner#")))
 
-(defun conner--write-commands (root-dir)
-  "Write the contents of `conner--commands' to ROOT-DIR's `conner-file-name' file."
-  (let ((conner-file (file-name-concat root-dir conner-file-name))
-        (commands conner--commands))
+(defun conner--update-commands-from-disk (root-dir &optional read-project read-local)
+  "Update `conner--commands' with values stored on disk.
+
+If READ-PROJECT is non-nil, update with ROOT-DIR's
+`conner-file-name' contents.
+
+If READ-LOCAL is non-nil, update with ROOT-DIR's associated local
+file.
+
+If both options are nil, read both files and append project
+specific commands to the local ones, making the local ones take
+precedence."
+  (if (or read-project read-local)
+      (let ((project-contents (and read-project (conner--read-commands (conner--construct-file-path root-dir))))
+            (local-contents (and read-local (conner--read-commands (conner--construct-local-file-path root-dir)))))
+        (setq conner--commands (append local-contents project-contents)))
+    (let ((project-contents (conner--read-commands (conner--construct-file-path root-dir)))
+          (local-contents (conner--read-commands (conner--construct-local-file-path root-dir))))
+      (setq conner--commands (append local-contents project-contents)))))
+
+(defun conner--read-commands (conner-file)
+  "Read the contents of CONNER-FILE."
+  (when (file-exists-p conner-file)
     (with-temp-buffer
-      (insert (pp commands))
+      (insert-file-contents (expand-file-name conner-file))
+      (read (current-buffer)))))
+
+(defun conner--write-commands (root-dir &optional prefix-arg)
+  "Write the contents of `conner--commands' to disk.
+
+If PREFIX-ARG is nil, write to ROOT-DIR's `conner-file-name'.
+
+If PREFIX-ARG is non-nil, write to ROOT-DIR's associated local
+file.
+
+This logic is inversed if `conner-default-file-behavior' is set
+to 'local'."
+  (let ((conner-file   (if (or
+                            (and current-prefix-arg (eq conner-default-file-behavior 'project))
+                            (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
+                           (conner--construct-local-file-path root-dir)
+                         (conner--construct-file-path root-dir))))
+    (with-temp-buffer
+      (insert (pp conner--commands))
       (write-file conner-file))))
 
 (defun conner--read-env-file (root-dir)
@@ -209,17 +262,20 @@ If no PROJECT is provided, it will use the value of
     (conner-update-command (project-root project))))
 
 (defun conner-run-command (root-dir &optional command-name)
-  "Run command COMMAND-NAME from ROOT-DIR's `conner-file-name'.
+  "Run command COMMAND-NAME.
 
 The user will be prompted for every optional parameter not
 specified.
+
+Commands are read from both ROOT-DIR's `conner-file-name' and
+ROOT-DIR's associated local file.
 
 The command will be ran in ROOT-DIR.
 
 If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
 `conner-env-file' before executing the command."
   (interactive "D")
-  (conner--read-commands root-dir)
+  (conner--update-commands-from-disk root-dir)
   (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
          (process-environment (if conner-read-env-file
                                   (append (conner--read-env-file root-dir) process-environment)
@@ -232,37 +288,64 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
     (compile command)))
 
 (defun conner-add-command (root-dir &optional command-name command)
-  "Add command COMMAND-NAME with value COMMAND to ROOT-DIR's `conner-file-name'.
+  "Add command COMMAND-NAME with value COMMAND.
 
 The user will be prompted for every optional parameter not
-specified."
+specified.
+
+Write to ROOT-DIR's `conner-file-name' by default.  If invoked
+with \\[universal-argument], write to a local file associated
+with ROOT-DIR.
+
+This logic is inversed if `conner-default-file-behavior' is set
+to 'local'."
   (interactive "D")
-  (conner--read-commands root-dir)
+  (if (or
+       (and current-prefix-arg (eq conner-default-file-behavior 'project))
+       (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
+      (conner--update-commands-from-disk root-dir nil t)
+    (conner--update-commands-from-disk root-dir t))
   (let ((command-name (or command-name (read-string "Enter command name: ")))
         (command (or command (read-string "Enter command: "))))
     (if (assoc command-name conner--commands)
-        (warn "A command with this name already exists")
+        (error "A command with this name already exists")
       (progn (add-to-list 'conner--commands `(,command-name . ,command))
-             (conner--write-commands root-dir)))))
+             (conner--write-commands root-dir current-prefix-arg)))))
 
 (defun conner-delete-command (root-dir &optional command-name)
-  "Delete command COMMAND-NAME from ROOT-DIR's `conner-file-name'.
+  "Delete command COMMAND-NAME and write to disk.
 
 The user will be prompted for every optional parameter not
-specified."
+specified.
+
+Write to ROOT-DIR's `conner-file-name' by default.  If invoked
+with \\[universal-argument], write to a local file associated
+with ROOT-DIR.
+
+This logic is inversed if `conner-default-file-behavior' is set
+to 'local'."
   (interactive "D")
-  (conner--read-commands root-dir)
+  (if (or
+       (and current-prefix-arg (eq conner-default-file-behavior 'project))
+       (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
+      (conner--update-commands-from-disk root-dir nil t)
+    (conner--update-commands-from-disk root-dir t))
   (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Delete command: " names)))
          (element (assoc command-name conner--commands)))
     (setq conner--commands (delete element conner--commands))
-    (conner--write-commands root-dir)))
+    (conner--write-commands root-dir current-prefix-arg)))
 
 (defun conner-update-command (root-dir &optional command-name new-name new-command)
   "Update command COMMAND-NAME to NEW-NAME and NEW-COMMAND.
 
-Command will be read from ROOT-DIR's `conner-file-name'.
+Command will be read from ROOT-DIR's `conner-file-name' by
+default.  If invoked with \\[universal-argument], read from a
+local file associated with ROOT-DIR.
+
+This logic is inversed if `conner-default-file-behavior' is set
+to 'local'.
 
 The user will be prompted for every optional parameter not
 specified.
@@ -270,13 +353,18 @@ specified.
 If a non-existent COMMAND-NAME is provided, it will be created
 instead."
   (interactive "D")
-  (conner--read-commands root-dir)
+  (if (or
+       (and current-prefix-arg (eq conner-default-file-behavior 'project))
+       (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
+      (conner--update-commands-from-disk root-dir nil t)
+    (conner--update-commands-from-disk root-dir t))
   (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Update command: " names)))
          (command (cdr (assoc command-name conner--commands)))
          (new-name (or new-name (read-string "Enter new name: " command-name)))
-         (new-command (or new-command (read-string "Enter new command: " command))))
+         (new-command (or new-command (read-string "Enter new command: " command)))
+         (current-prefix-arg current-prefix-arg))
     (conner-delete-command root-dir command-name)
     (conner-add-command root-dir new-name new-command)))
 
