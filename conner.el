@@ -305,12 +305,11 @@ to 'local'."
        (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
       (conner--update-commands-from-disk root-dir nil t)
     (conner--update-commands-from-disk root-dir t))
-  (let ((command-name (or command-name (read-string "Enter command name: ")))
-        (command (or command (read-string "Enter command: "))))
-    (if (assoc command-name conner--commands)
-        (error "A command with this name already exists")
-      (progn (add-to-list 'conner--commands `(,command-name . ,command))
-             (conner--write-commands root-dir current-prefix-arg)))))
+  (let* ((command-name (or command-name (read-string "Enter command name: ")))
+         (command (or command (read-string "Enter command: ")))
+         (updated-list (conner--add-command-to-list conner--commands command-name command)))
+    (setq conner--commands updated-list)
+    (conner--write-commands root-dir current-prefix-arg)))
 
 (defun conner-delete-command (root-dir &optional command-name)
   "Delete command COMMAND-NAME and write to disk.
@@ -367,6 +366,12 @@ instead."
          (current-prefix-arg current-prefix-arg))
     (conner-delete-command root-dir command-name)
     (conner-add-command root-dir new-name new-command)))
+
+(defun conner--add-command-to-list (command-list command-name command)
+  "Add command COMMAND-NAME with value COMMAND to COMMAND-LIST."
+  (if (assoc command-name command-list)
+      (error "A command with this name already exists")
+    (add-to-list 'command-list `(,command-name . ,command))))
 
 
 (provide 'conner)
