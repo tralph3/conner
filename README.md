@@ -40,6 +40,24 @@ long, or it simply doesn't exit, you can still run other commands in
 the meantime.
 
 
+## Using local conner files
+
+If you don't like to litter your repository with IDE specific files
+(like the typical `.vscode` or `.idea` folders, among others), then
+conner has support for "local" files. That is, files that store your
+conner commands in your `emacs-user-directory`, instead of the root of
+your project.
+
+To use this feature, simply pass a prefix argument to any of the user
+facing functions with `C-u`. The only function that doesn't accept
+this argument is `conner-run-command`, since it will always read both
+local and project files.
+
+If you prefer to always use local files instead of project files, you
+can set the variable `conner-default-file-behavior` to `'local`. Doing
+so will make all of the functions default to local files, and passing
+the prefix argument to them will make them read the project files.
+
 ## Acknowledgments
 
 The source code for the processing of `.env` files was taken from
