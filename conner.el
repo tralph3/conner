@@ -332,8 +332,8 @@ to 'local'."
   (let* ((completion-extra-properties '(:annotation-function conner--annotation-function))
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Delete command: " names)))
-         (element (assoc command-name conner--commands)))
-    (setq conner--commands (delete element conner--commands))
+         (updated-list (conner--delete-command-from-list conner--commands command-name)))
+    (setq conner--commands updated-list)
     (conner--write-commands root-dir current-prefix-arg)))
 
 (defun conner-update-command (root-dir &optional command-name new-name new-command)
@@ -372,6 +372,10 @@ instead."
   (if (assoc command-name command-list)
       (error "A command with this name already exists")
     (add-to-list 'command-list `(,command-name . ,command))))
+
+(defun conner--delete-command-from-list (command-list command-name)
+  "Delete command COMMAND-NAME from COMMAND-LIST."
+  (delete (assoc command-name command-list) command-list))
 
 
 (provide 'conner)
