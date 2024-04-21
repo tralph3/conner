@@ -168,11 +168,11 @@ associated local file.
 
 This logic is inversed if `conner-default-file-behavior' is set
 to `local'."
-  (let ((conner-file   (if (or
-                            (and current-prefix-arg (eq conner-default-file-behavior 'project))
-                            (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
-                           (conner--construct-local-file-path root-dir)
-                         (conner--construct-file-path root-dir))))
+  (let ((conner-file (if (or
+                          (and current-prefix-arg (eq conner-default-file-behavior 'project))
+                          (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
+                         (conner--construct-local-file-path root-dir)
+                       (conner--construct-file-path root-dir))))
     (with-temp-buffer
       (insert (pp conner--commands))
       (write-file conner-file))))
