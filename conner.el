@@ -80,12 +80,12 @@ apply and be visible to conner commands."
 (defcustom conner-default-file-behavior 'project
   "Where should conner operate by default.
 
-If set to 'project', conner will read, write and update commands
+If set to `project', conner will read, write and update commands
 defined in the `conner-file-name' of the directory by
 default.  You would need to pass \\[universal-argument] to these
 functions to have them operate on the associated local file.
 
-If set to 'local', the inverse is true.  It will operate on the
+If set to `local', the inverse is true.  It will operate on the
 local file by default, and you will need to pass
 \\[universal-argument] to have it operate on the project file."
   :type '(choice (const :tag "Project file" project)
@@ -167,7 +167,7 @@ If PREFIX-ARG is non-nil, write to ROOT-DIR's associated local
 file.
 
 This logic is inversed if `conner-default-file-behavior' is set
-to 'local'."
+to `local'."
   (let ((conner-file   (if (or
                             (and current-prefix-arg (eq conner-default-file-behavior 'project))
                             (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
@@ -298,7 +298,7 @@ with \\[universal-argument], write to a local file associated
 with ROOT-DIR.
 
 This logic is inversed if `conner-default-file-behavior' is set
-to 'local'."
+to `local'."
   (interactive "D")
   (if (or
        (and current-prefix-arg (eq conner-default-file-behavior 'project))
@@ -322,7 +322,7 @@ with \\[universal-argument], write to a local file associated
 with ROOT-DIR.
 
 This logic is inversed if `conner-default-file-behavior' is set
-to 'local'."
+to `local'."
   (interactive "D")
   (if (or
        (and current-prefix-arg (eq conner-default-file-behavior 'project))
@@ -344,7 +344,7 @@ default.  If invoked with \\[universal-argument], read from a
 local file associated with ROOT-DIR.
 
 This logic is inversed if `conner-default-file-behavior' is set
-to 'local'.
+to `local'.
 
 The user will be prompted for every optional parameter not
 specified.
