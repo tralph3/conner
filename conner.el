@@ -161,10 +161,10 @@ precedence."
 (defun conner--write-commands (root-dir)
   "Write the contents of `conner--commands' to disk.
 
-If PREFIX-ARG is nil, write to ROOT-DIR's `conner-file-name'.
+Write to ROOT-DIR's `conner-file-name' by default.
 
-If PREFIX-ARG is non-nil, write to ROOT-DIR's associated local
-file.
+If invoked with \\[universal-argument], write to ROOT-DIR's
+associated local file.
 
 This logic is inversed if `conner-default-file-behavior' is set
 to `local'."
