@@ -1,6 +1,6 @@
 # Conner
 
-Conner is a **Co**mmand Ru**nner** for GNU emacs.
+Conner is a **Co**mmand Ru**nner** for GNU Emacs.
 
 ---
 
@@ -16,7 +16,7 @@ object that contains a list of command names, and the commands
 themselves.
 
 Conner also provides a multitude of functions to add, delete, update,
-and of course, run these commands from within emacs. It integrates
+and of course, run these commands from within Emacs. It integrates
 with `project.el`, so you can run these commands on arbitrary folders,
 or have it automatically detect the current project's root.
 
@@ -24,7 +24,7 @@ Additionally, conner also has support for `.env` files. By default,
 conner will look in the root directory of your project for a `.env`
 file and load any environment variables found within. These variables
 are then accessible to conner commands, and won't pollute the regular
-emacs session.
+Emacs session.
 
 
 ## Usage
