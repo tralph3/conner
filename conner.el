@@ -158,7 +158,7 @@ precedence."
       (insert-file-contents (expand-file-name conner-file))
       (read (current-buffer)))))
 
-(defun conner--write-commands (root-dir &optional prefix-arg)
+(defun conner--write-commands (root-dir)
   "Write the contents of `conner--commands' to disk.
 
 If PREFIX-ARG is nil, write to ROOT-DIR's `conner-file-name'.
@@ -309,7 +309,7 @@ to 'local'."
          (command (or command (read-string "Enter command: ")))
          (updated-list (conner--add-command-to-list conner--commands command-name command)))
     (setq conner--commands updated-list)
-    (conner--write-commands root-dir current-prefix-arg)))
+    (conner--write-commands root-dir)))
 
 (defun conner-delete-command (root-dir &optional command-name)
   "Delete command COMMAND-NAME and write to disk.
@@ -334,7 +334,7 @@ to 'local'."
          (command-name (or command-name (completing-read "Delete command: " names)))
          (updated-list (conner--delete-command-from-list conner--commands command-name)))
     (setq conner--commands updated-list)
-    (conner--write-commands root-dir current-prefix-arg)))
+    (conner--write-commands root-dir)))
 
 (defun conner-update-command (root-dir &optional command-name new-name new-command)
   "Update command COMMAND-NAME to NEW-NAME and NEW-COMMAND.
