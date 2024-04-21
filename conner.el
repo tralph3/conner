@@ -379,8 +379,8 @@ instead."
 
 (defun conner--update-command-from-list (command-list command-name new-name new-command)
   "Update command COMMAND-NAME from COMMAND-LIST with NEW-NAME and NEW-COMMMAND."
-  (let ((command-deleted (conner--delete-command-from-list command-list command-name))
-        (updated-list (conner--add-command-to-list new-name new-command)))
+  (let* ((command-deleted (conner--delete-command-from-list command-list command-name))
+         (updated-list (conner--add-command-to-list command-deleted new-name new-command)))
     updated-list))
 
 (provide 'conner)
