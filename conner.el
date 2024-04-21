@@ -52,6 +52,8 @@
 
 ;;; Code:
 
+(require 'project)
+
 (defgroup conner nil
   "Conner is a Command Runner for GNU Emacs."
   :link '(url-link :tag "Homepage" "https://github.com/tralph3/conner")
