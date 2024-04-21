@@ -371,7 +371,7 @@ instead."
   "Add command COMMAND-NAME with value COMMAND to COMMAND-LIST."
   (if (assoc command-name command-list)
       (error "A command with this name already exists")
-    (add-to-list 'command-list `(,command-name . ,command))))
+    (push `(,command-name . ,command) command-list)))
 
 (defun conner--delete-command-from-list (command-list command-name)
   "Delete command COMMAND-NAME from COMMAND-LIST."
