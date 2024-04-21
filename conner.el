@@ -363,9 +363,9 @@ instead."
          (command (cdr (assoc command-name conner--commands)))
          (new-name (or new-name (read-string "Enter new name: " command-name)))
          (new-command (or new-command (read-string "Enter new command: " command)))
-         (current-prefix-arg current-prefix-arg))
-    (conner-delete-command root-dir command-name)
-    (conner-add-command root-dir new-name new-command)))
+         (updated-list (conner--update-command-from-list conner--commands command-name new-name new-command)))
+    (setq conner--commands updated-list)
+    (conner--write-commands root-dir)))
 
 (defun conner--add-command-to-list (command-list command-name command)
   "Add command COMMAND-NAME with value COMMAND to COMMAND-LIST."
@@ -377,6 +377,11 @@ instead."
   "Delete command COMMAND-NAME from COMMAND-LIST."
   (delete (assoc command-name command-list) command-list))
 
+(defun conner--update-command-from-list (command-list command-name new-name new-command)
+  "Update command COMMAND-NAME from COMMAND-LIST with NEW-NAME and NEW-COMMMAND."
+  (let ((command-deleted (conner--delete-command-from-list command-list command-name))
+        (updated-list (conner--add-command-to-list new-name new-command)))
+    updated-list))
 
 (provide 'conner)
 
