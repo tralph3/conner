@@ -52,6 +52,8 @@
 
 (require 'project)
 
+(add-to-list 'auto-mode-alist '("\\.conner" . emacs-lisp-mode))
+
 (defgroup conner nil
   "Conner is a Command Runner for GNU Emacs."
   :link '(url-link :tag "Homepage" "https://github.com/tralph3/conner")
