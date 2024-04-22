@@ -108,7 +108,10 @@ the data related to this command.
 Additionally, each entry can optionally specify a string
 explaining the type which will then be displayed as an annotation
 in the minibuffer for completing read operations."
-  :type '(repeat (list string function string)))
+  :type '(repeat (list
+                  (string :tag "Type name")
+                  (function :tag "Handler function")
+                  (string :tag "Comment"))))
 
 (defcustom conner-default-command-type "compile"
   "Command type to use when not specified otherwise.
