@@ -53,4 +53,4 @@
 
 (ert-deftest conner-test-construct-local-file-path ()
   (with-temp-env (should (equal (conner--construct-local-file-path conner-root-dir)
-                                (expand-file-name (file-name-concat user-emacs-directory "conner/!tmp.#conner"))))))
+                                (expand-file-name (file-name-concat user-emacs-directory "conner/!tmp.#conner#"))))))
