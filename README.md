@@ -1,4 +1,5 @@
-[Tests](https://github.com/tralph3/conner/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/tralph3/conner/actions/workflows/tests.yml/badge.svg)](https://github.com/tralph3/conner/actions/workflows/tests.yml)
+
 
 # Conner
 
