@@ -1,3 +1,5 @@
+[Tests](https://github.com/tralph3/conner/actions/workflows/tests.yml/badge.svg)
+
 # Conner
 
 Conner is a **Co**mmand Ru**nner** for GNU Emacs.
