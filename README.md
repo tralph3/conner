@@ -1,4 +1,4 @@
-[![Tests](https://github.com/tralph3/conner/actions/workflows/tests.yml/badge.svg)](https://github.com/tralph3/conner/actions/workflows/tests.yml)
+[![tests](https://github.com/tralph3/conner/actions/workflows/tests.yml/badge.svg)](https://github.com/tralph3/conner/actions/workflows/tests.yml)
 
 
 # Conner
@@ -7,61 +7,92 @@ Conner is a **Co**mmand Ru**nner** for GNU Emacs.
 
 ---
 
-Conner allows you to define arbitrary commands for each of your
-projects. Every project could have a different way to compile it, to
-run it, to test it, to prettify it, to watch for changes, to debug it,
-to install it, or any other thing. With conner, you can define a
-command for each of these actions, or any other you want.
+Conner allows you to define custom commands tailored to your projects'
+needs. Whether it's compiling, running, testing, prettifying,
+monitoring changes, debugging, installing, or any other task specific
+to your workflow, Conner makes it easy to integrate with Emacs.
 
-Commands are defined in the conner file, by default called `.conner`,
-situated at the root of your project. Inside it, you'll find a lisp
-object that contains a list of command names, and the commands
-themselves.
+Commands are configured in a `.conner` file, typically located at the
+root of your project. Inside this file, you'll define a Lisp object
+containing a list of command names, their respective commands, and
+their types.
 
-Conner also provides a multitude of functions to add, delete, update,
-and of course, run these commands from within Emacs. It integrates
-with `project.el`, so you can run these commands on arbitrary folders,
-or have it automatically detect the current project's root.
+Integration with `project.el` enables seamless execution of these
+commands within Emacs, either on arbitrary directories or
+automatically detecting the current project's root.
 
-Additionally, conner also has support for `.env` files. By default,
-conner will look in the root directory of your project for a `.env`
+Additionally, Conner also has support for `.env` files. By default,
+Conner will look in the root directory of your project for a `.env`
 file and load any environment variables found within. These variables
-are then accessible to conner commands, and won't pollute the regular
+are then accessible to Conner commands, and won't pollute the regular
 Emacs session.
+
+Conner is configurable, so you can add your own command types if
+what's available doesn't quite suit your needs.
 
 
 ## Usage
 
-The first thing you'll want to do is to add a command, simply run `M-x
-conner-add-project-command` or `M-x conner-add-command` to get
-started. After it has been defined, you can run `M-x
-conner-run-project-command` or `M-x conner-run-command` to run it.
+To add a command, simply execute `M-x conner-add-project-command` or
+`M-x conner-add-command`. Once defined, run the command using `M-x
+conner-run-project-command` or `M-x conner-run-command`.
 
-A compilation buffer will open and run your command. Separate buffers
-are assigned to each command based on their names, so if one takes too
-long, or it simply doesn't exit, you can still run other commands in
-the meantime.
+By default, each command gets defined with the `compile` type. This
+can be changed by modifying `conner-default-command-type`.
+
+Compile commands run on their own compilation buffer. This design
+allows concurrent execution of multiple commands, useful if you run
+commands with a long run time, or commands that don't exit at all.
 
 
-## Using local conner files
+## Local Conner files
 
-If you don't like to litter your repository with IDE specific files
-(like the typical `.vscode` or `.idea` folders, among others), then
-conner has support for "local" files. That is, files that store your
-conner commands in your `emacs-user-directory`, instead of the root of
-your project.
+For those who prefer keeping their repositories free from IDE-specific
+files, Conner offers support for "local" Conner files. These files are
+stored in your `emacs-user-directory`.
 
-To use this feature, simply pass a prefix argument to any of the user
-facing functions with `C-u`. The only function that doesn't accept
-this argument is `conner-run-command`, since it will always read both
-local and project files.
+Whenever you invoke `conner-run-command`, it will load both the
+project `.conner` file, as well as the associated file for that
+directory stored in your `emacs-user-directory`.
 
-If you prefer to always use local files instead of project files, you
-can set the variable `conner-default-file-behavior` to `'local`. Doing
-so will make all of the functions default to local files, and passing
-the prefix argument to them will make them read the project files.
+To utilize this feature, simply prefix any user-facing function with
+`C-u`. Note that `conner-run-command` always reads both local and
+project files.
+
+If you prefer using local files by default, set the variable
+`conner-default-file-behavior` to `'local`. This setting makes all
+functions default to local files, with the prefix argument allowing
+access to project files.
+
+
+## Command types
+
+While Conner ships with the `compile` command type, you can define
+custom types tailored to your requirements. Adding a custom command
+type is straightforward:
+
+1. Define a function to execute the command.
+2. Register the function in `conner-command-types-alist`.
+
+Custom command functions receive the command to run, a list
+representing the command configuration, and the root directory. This
+directory corresponds to the directory with which `conner-run-command`
+was originally invoked.
+
+Below is an example of a custom command type for running commands in
+the [eat](https://codeberg.org/akib/emacs-eat) terminal:
+
+```emacs-lisp
+(defun conner--run-eat-command (command &rest _)
+  (when (not (featurep 'eat))
+    (error "Eat is not installed or not loaded. Aborting"))
+    (eat command))
+
+(add-to-list 'conner-command-types-alist `("eat" #'conner--run-eat-command "Run command with the eat terminal."))
+```
+
 
 ## Acknowledgments
 
-The source code for the processing of `.env` files was taken from
-[diasjorge's load-env-vars](https://github.com/diasjorge/emacs-load-env-vars).
+The processing of `.env` files in Conner is based on [diasjorge's
+load-env-vars](https://github.com/diasjorge/emacs-load-env-vars).
