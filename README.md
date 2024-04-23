@@ -83,10 +83,12 @@ Below is an example of a custom command type for running commands in
 the [eat](https://codeberg.org/akib/emacs-eat) terminal:
 
 ```emacs-lisp
-(defun conner--run-eat-command (command &rest _)
+(defun conner--run-eat-command (command element &rest _)
   (when (not (featurep 'eat))
     (error "Eat is not installed or not loaded. Aborting"))
-  (eat command))
+  (let* ((command-name (car element))
+         (eat-buffer-name (concat "*conner-eat-" command-name "*")))
+    (eat command)))
 
 (add-to-list 'conner-command-types-alist
              `("eat" ,#'conner--run-eat-command "Run command with the eat terminal."))
