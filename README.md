@@ -86,9 +86,10 @@ the [eat](https://codeberg.org/akib/emacs-eat) terminal:
 (defun conner--run-eat-command (command &rest _)
   (when (not (featurep 'eat))
     (error "Eat is not installed or not loaded. Aborting"))
-    (eat command))
+  (eat command))
 
-(add-to-list 'conner-command-types-alist `("eat" #'conner--run-eat-command "Run command with the eat terminal."))
+(add-to-list 'conner-command-types-alist
+             `("eat" #'conner--run-eat-command "Run command with the eat terminal."))
 ```
 
 
