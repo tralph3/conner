@@ -52,6 +52,7 @@
 
 (require 'project)
 
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.conner" . emacs-lisp-mode))
 
 (defgroup conner nil
@@ -245,7 +246,7 @@ to `local'."
     (format "%s%s%s" indent tabs command)))
 
 (defun conner--command-type-annotation-function (candidate)
-  "Get CANDIDATE's type explanation and format for use in minibuffer annotation."
+  "Get CANDIDATE's type comment and format for use in minibuffer annotation."
   (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner-command-types-alist))))
          (indent (make-string (- max-width (length candidate)) ?\s))
          (type-comment (caddr (assoc candidate conner-command-types-alist)))
@@ -265,6 +266,7 @@ call."
         (car types)
       (completing-read "Select command type: " types nil t initial-input))))
 
+;;;###autoload
 (defun conner-run-project-command (&optional project)
   "Project aware variant of `conner-run-command'.
 
@@ -277,6 +279,7 @@ If no PROJECT is provided, it will use the value of
   (let ((project (or project (project-current t))))
     (conner-run-command (project-root project))))
 
+;;;###autoload
 (defun conner-add-project-command (&optional project)
   "Project aware variant of `conner-add-command'.
 
@@ -289,6 +292,7 @@ If no PROJECT is provided, it will use the value of
   (let ((project (or project (project-current t))))
     (conner-add-command (project-root project))))
 
+;;;###autoload
 (defun conner-delete-project-command (&optional project)
   "Project aware variant of `conner-delete-command'.
 
@@ -301,6 +305,7 @@ If no PROJECT is provided, it will use the value of
   (let ((project (or project (project-current t))))
     (conner-delete-command (project-root project))))
 
+;;;###autoload
 (defun conner-update-project-command (&optional project)
   "Project aware variant of `conner-update-command'.
 
@@ -313,6 +318,7 @@ If no PROJECT is provided, it will use the value of
   (let ((project (or project (project-current t))))
     (conner-update-command (project-root project))))
 
+;;;###autoload
 (defun conner-run-command (root-dir &optional command-name)
   "Run command COMMAND-NAME.
 
@@ -341,6 +347,7 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
          (default-directory root-dir))
     (funcall command-func command element root-dir)))
 
+;;;###autoload
 (defun conner-add-command (root-dir &optional command-name command command-type)
   "Add command COMMAND-NAME with value COMMAND.
 
@@ -366,6 +373,7 @@ to `local'."
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
+;;;###autoload
 (defun conner-delete-command (root-dir &optional command-name)
   "Delete command COMMAND-NAME and write to disk.
 
@@ -391,6 +399,7 @@ to `local'."
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
+;;;###autoload
 (defun conner-update-command (root-dir &optional command-name new-name new-command new-command-type)
   "Update command COMMAND-NAME to NEW-NAME, NEW-COMMAND and NEW-COMMAND-TYPE.
 
