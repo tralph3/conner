@@ -240,7 +240,10 @@ to `local'."
   "Get CANDIDATE's command and format for use in minibuffer annotation."
   (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner--commands))))
          (indent (make-string (- max-width (length candidate)) ?\s))
-         (command (cadr (assoc candidate conner--commands)))
+         (command (car
+                   (cl-remove-if #'string-blank-p
+                                 (split-string
+                                  (cadr (assoc candidate conner--commands)) "\n"))))
          (tabs (make-string 6 ?\t)))
     (format "%s%s%s" indent tabs command)))
 
@@ -257,13 +260,27 @@ to `local'."
 
 If there is only one candidate, select it automatically.
 
-Use INITIAL-INPUT as the initial input in the `completing-read'
-call."
+Pre-fill the prompt with INITIAL-INPUT if non-nil."
   (let ((completion-extra-properties '(:annotation-function conner--command-type-annotation-function))
         (types (mapcar #'car conner-command-types-alist)))
     (if (equal (length types) 1)
         (car types)
       (completing-read "Select command type: " types nil t initial-input))))
+
+(defun conner--prompt-for-command (&optional initial-input)
+  "Prompt the user to write out their desired command.
+
+Pre-fill the prompt with INITIAL-INPUT if non-nil.
+
+This function remaps return to allow for easy insertion of
+newlines, simplifying the input of multiline commands."
+  (let ((keymap (copy-keymap minibuffer-local-map))
+        (resize-mini-windows t))
+    (define-key keymap (kbd "RET") #'newline)
+    (define-key keymap (kbd "C-c C-c") #'exit-minibuffer)
+    (define-key keymap (kbd "C-c C-k") #'minibuffer-keyboard-quit)
+    (read-from-minibuffer "Enter command (C-c C-c to submit): "
+                          initial-input keymap)))
 
 ;;;###autoload
 (defun conner-run-project-command (&optional project)
@@ -366,7 +383,7 @@ to `local'."
       (conner--update-commands-from-disk root-dir nil t)
     (conner--update-commands-from-disk root-dir t))
   (let* ((command-name (or command-name (read-string "Enter command name: ")))
-         (command (or command (read-string "Enter command: ")))
+         (command (or command (conner--prompt-for-command)))
          (command-type (or command-type (conner--prompt-for-command-type)))
          (updated-list (conner--add-command-to-list conner--commands command-name command command-type)))
     (setq conner--commands updated-list)
@@ -426,7 +443,7 @@ instead."
          (command (cadr (assoc command-name conner--commands)))
          (command-type (caddr (assoc command-name conner--commands)))
          (new-name (or new-name (read-string "Enter new name: " command-name)))
-         (new-command (or new-command (read-string "Enter new command: " command)))
+         (new-command (or new-command (conner--prompt-for-command command)))
          (new-command-type (or new-command-type (conner--prompt-for-command-type command-type)))
          (updated-list (conner--update-command-from-list conner--commands command-name new-name new-command new-command-type)))
     (setq conner--commands updated-list)
