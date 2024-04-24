@@ -261,7 +261,8 @@ to `local'."
 If there is only one candidate, select it automatically.
 
 Pre-fill the prompt with INITIAL-INPUT if non-nil."
-  (let ((completion-extra-properties '(:annotation-function conner--command-type-annotation-function))
+  (let ((completion-extra-properties
+         '(:annotation-function conner--command-type-annotation-function))
         (types (mapcar #'car conner-command-types-alist)))
     (if (equal (length types) 1)
         (car types)
@@ -350,7 +351,8 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
 `conner-env-file' before executing the command."
   (interactive "D")
   (conner--update-commands-from-disk root-dir)
-  (let* ((completion-extra-properties '(:annotation-function conner--command-annotation-function))
+  (let* ((completion-extra-properties
+          '(:annotation-function conner--command-annotation-function))
          (process-environment (if conner-read-env-file
                                   (append (conner--read-env-file root-dir) process-environment)
                                 process-environment))
@@ -385,7 +387,9 @@ to `local'."
   (let* ((command-name (or command-name (read-string "Enter command name: ")))
          (command (or command (conner--prompt-for-command)))
          (command-type (or command-type (conner--prompt-for-command-type)))
-         (updated-list (conner--add-command-to-list conner--commands command-name command command-type)))
+         (updated-list
+          (conner--add-command-to-list
+           conner--commands command-name command command-type)))
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
@@ -408,7 +412,8 @@ to `local'."
        (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
       (conner--update-commands-from-disk root-dir nil t)
     (conner--update-commands-from-disk root-dir t))
-  (let* ((completion-extra-properties '(:annotation-function conner--command-annotation-function))
+  (let* ((completion-extra-properties
+          '(:annotation-function conner--command-annotation-function))
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Delete command: " names)))
          (updated-list (conner--delete-command-from-list conner--commands command-name)))
@@ -437,7 +442,8 @@ instead."
        (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
       (conner--update-commands-from-disk root-dir nil t)
     (conner--update-commands-from-disk root-dir t))
-  (let* ((completion-extra-properties '(:annotation-function conner--command-annotation-function))
+  (let* ((completion-extra-properties
+          '(:annotation-function conner--command-annotation-function))
          (names (mapcar #'car conner--commands))
          (command-name (or command-name (completing-read "Update command: " names)))
          (command (cadr (assoc command-name conner--commands)))
@@ -445,7 +451,9 @@ instead."
          (new-name (or new-name (read-string "Enter new name: " command-name)))
          (new-command (or new-command (conner--prompt-for-command command)))
          (new-command-type (or new-command-type (conner--prompt-for-command-type command-type)))
-         (updated-list (conner--update-command-from-list conner--commands command-name new-name new-command new-command-type)))
+         (updated-list
+          (conner--update-command-from-list
+           conner--commands command-name new-name new-command new-command-type)))
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
@@ -465,7 +473,9 @@ instead."
 (defun conner--update-command-from-list (command-list command-name new-name new-command new-command-type)
   "Update command COMMAND-NAME from COMMAND-LIST with NEW-NAME, NEW-COMMMAND and NEW-COMMAND-TYPE."
   (let* ((command-deleted (conner--delete-command-from-list command-list command-name))
-         (updated-list (conner--add-command-to-list command-deleted new-name new-command new-command-type)))
+         (updated-list
+          (conner--add-command-to-list
+           command-deleted new-name new-command new-command-type)))
     updated-list))
 
 (defun conner--run-compile-command (command element &rest _)
@@ -473,7 +483,8 @@ instead."
 
 Use ELEMENT to obtain the command name of the command."
   (let* ((command-name (car element))
-         (compilation-buffer-name-function (lambda (_) (concat "*conner-compilation-" command-name "*"))))
+         (compilation-buffer-name-function
+          (lambda (_) (concat "*conner-compilation-" command-name "*"))))
     (compile command)))
 
 
