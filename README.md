@@ -7,6 +7,11 @@ Conner is a **Co**mmand Ru**nner** for GNU Emacs.
 
 ---
 
+> [!WARNING]
+> Conner is currently alpha software. Nothing is set in stone, so the
+> API or the .conner file format may change. As such, until I release
+> 1.0, I reserve the right to break configs.
+
 Conner allows you to define custom commands tailored to your projects'
 needs. Whether it's compiling, running, testing, prettifying,
 monitoring changes, debugging, installing, or any other task specific
