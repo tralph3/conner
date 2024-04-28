@@ -279,7 +279,7 @@ newlines, simplifying the input of multiline commands."
         (resize-mini-windows t))
     (define-key keymap (kbd "RET") #'newline)
     (define-key keymap (kbd "C-c C-c") #'exit-minibuffer)
-    (define-key keymap (kbd "C-c C-k") #'minibuffer-keyboard-quit)
+    (define-key keymap (kbd "C-c C-k") #'abort-minibuffers)
     (read-from-minibuffer "Enter command (C-c C-c to submit): "
                           initial-input keymap)))
 
