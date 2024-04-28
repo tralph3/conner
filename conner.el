@@ -471,7 +471,10 @@ instead."
   (delete (assoc command-name command-list) command-list))
 
 (defun conner--update-command-from-list (command-list command-name new-name new-command new-command-type)
-  "Update command COMMAND-NAME from COMMAND-LIST with NEW-NAME, NEW-COMMMAND and NEW-COMMAND-TYPE."
+  "Update command COMMAND-NAME from COMMAND-LIST.
+
+New values for the command will be NEW-NAME, NEW-COMMMAND and
+NEW-COMMAND-TYPE."
   (let* ((command-deleted (conner--delete-command-from-list command-list command-name))
          (updated-list
           (conner--add-command-to-list
