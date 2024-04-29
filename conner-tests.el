@@ -61,7 +61,7 @@
 
 (ert-deftest conner-test-update-command ()
   (with-temp-env
-   (conner-add-command conner-root-dir '(:name "Tpyo in nmae" :command "tpyo" :type "comple"))
+   (conner-add-command conner-root-dir '(:name "Tpyo in nmae" :command "tpyo" :type "compile"))
    (conner-update-command conner-root-dir "Tpyo in nmae" '(:name "Typo in name" :command "typst" :type "compile"))
    (should (equal (get-conner-contents) '((:name "Typo in name" :command "typst" :type "compile"))))))
 
