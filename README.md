@@ -79,24 +79,24 @@ type is straightforward:
 1. Define a function to execute the command.
 2. Register the function in `conner-command-types-alist`.
 
-Custom command functions receive the command to run, a list
-representing the command configuration, and the root directory. This
-directory corresponds to the directory with which `conner-run-command`
-was originally invoked.
+Custom command functions receive the plist of the command, which
+contains all the data saved in the Conner file, and the root
+directory. This directory corresponds to the directory with which
+`conner-run-command` was originally invoked.
 
 Below is an example of a custom command type for running commands in
 the [eat](https://codeberg.org/akib/emacs-eat) terminal:
 
 ```emacs-lisp
-(defun conner--run-eat-command (command element &rest _)
+(defun conner--run-eat-command (plist &rest _)
   (when (not (featurep 'eat))
     (error "Eat is not installed or not loaded. Aborting"))
-  (let* ((command-name (car element))
+  (let* ((command-name (plist-get plist :name))
          (eat-buffer-name (concat "*conner-eat-" command-name "*")))
-    (eat command)))
+    (eat (plist-get plist :command))))
 
 (add-to-list 'conner-command-types-alist
-             `("eat" ,#'conner--run-eat-command "Run command with the eat terminal."))
+             `("eat" ,#'conner--run-eat-command))
 ```
 
 
