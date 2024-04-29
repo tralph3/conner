@@ -99,7 +99,7 @@ You can add your own command types here.  Each associated function
 will be given two arguments.
 
 1. PLIST, which is the plist that represents the command that has
-been called. You can use `plist-get' to fetch data from it.
+been called.  You can use `plist-get' to fetch data from it.
 
 2. ROOT-DIR, which is the path given to `conner-run-command'."
   :type '(repeat (list
@@ -557,15 +557,16 @@ instead."
     updated-list))
 
 (defun conner--run-compile-command (plist &rest _)
-  "Run the command COMMAND-PLIST in an unique compilation buffer."
+  "Run the command PLIST in an unique compilation buffer."
   (let* ((command-name (plist-get plist :name))
          (compilation-buffer-name-function
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
     (compile (plist-get plist :command))))
 
 (defun conner--run-eat-command (plist &rest _)
+  "Run the command PLIST in an unique and interactive eat buffer."
   (when (not (featurep 'eat))
-    (error "Eat is not installed or not loaded. Aborting"))
+    (error "Eat is not installed or not loaded.  Aborting"))
   (let* ((command-name (plist-get plist :name))
          (eat-buffer-name (concat "*conner-eat-" command-name "*")))
     (eat (plist-get plist :command))))
