@@ -162,3 +162,9 @@
          (conner-command-types-alist `(("test type" ,#'fake-command-runner))))
      (conner-add-command conner-root-dir '(:name "Run me" :command "now" :type "test type"))
      (conner-run-command conner-root-dir "Run me"))))
+
+(ert-deftest conner-test-read-command-env-var ()
+  (with-temp-env
+   (let ((conner-command-types-alist `(("test type" ,#'fake-runner-check-env))))
+     (conner-add-command conner-root-dir '(:name "Run me" :command "should exist" :type "test type" :environment ("VAR1: someval")))
+     (conner-run-command conner-root-dir "Run me"))))

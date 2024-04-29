@@ -257,16 +257,31 @@ to `local'."
         (insert (conner--pp-plist-list conner--commands))
         (write-file conner-file)))))
 
+(defun conner--construct-env-var-list (env-alist)
+  "Return a list of strings in the form VAR=val.
+
+ENV-ALIST should be an alist of environment variables where car
+is the key and cdr is the value."
+  (setq-local conner--env-var-list nil)
+  (dolist (element env-alist)
+    (let ((key (car element))
+          (value (cadr element)))
+      (add-to-list 'conner--env-var-list (concat key "=" value))))
+  conner--env-var-list)
+
+(defun conner--read-command-env-vars (plist)
+  "Read env vars of PLIST's :environment and return list of strings."
+  (with-temp-buffer
+    (dolist (elem (plist-get plist :environment))
+      (insert (concat elem "\n")))
+    (let ((env-vars (conner--get-env-vars-in-buffer)))
+      (conner--construct-env-var-list env-vars))))
+
 (defun conner--read-env-file (root-dir)
   "Read ROOT-DIR's `conner-env-file' and return a list of strings."
-  (setq-local conner--env-var-list nil)
   (let* ((env-file (file-name-concat root-dir conner-env-file))
          (env-vars (conner--load-env-vars env-file)))
-    (dolist (element env-vars)
-      (let ((key (car element))
-            (value (cadr element)))
-        (add-to-list 'conner--env-var-list (concat key "=" value))))
-    conner--env-var-list))
+    (conner--construct-env-var-list env-vars)))
 
 (defun conner--get-env-vars-in-buffer ()
   "Get a list of all REGEXP matches in a buffer."
@@ -418,6 +433,7 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
                                 process-environment))
          (command-name (or command-name (completing-read "Select a command: " (conner--get-command-names))))
          (plist (conner--find-command-with-value :name command-name))
+         (process-environment (append (conner--read-command-env-vars plist) process-environment))
          (command-type (plist-get plist :type))
          (command-workdir (plist-get plist :workdir))
          (command-func (cadr (assoc command-type conner-command-types-alist)))
