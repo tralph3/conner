@@ -91,7 +91,8 @@ local file by default, and you will need to pass
                  (const :tag "Local file" local)))
 
 (defcustom conner-command-types-alist
-  `(("compile" ,#'conner--run-compile-command))
+  `(("compile" ,#'conner--run-compile-command)
+    ("eat" ,#'conner--run-eat-command))
   "Alist of command types and their associated functions.
 
 You can add your own command types here.  Each associated function
@@ -536,13 +537,19 @@ instead."
            command-deleted new-command-plist)))
     updated-list))
 
-(defun conner--run-compile-command (command-plist &rest _)
+(defun conner--run-compile-command (plist &rest _)
   "Run the command COMMAND-PLIST in an unique compilation buffer."
-  (let* ((command-name (plist-get command-plist :name))
+  (let* ((command-name (plist-get plist :name))
          (compilation-buffer-name-function
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
-    (compile (plist-get command-plist :command))))
+    (compile (plist-get plist :command))))
 
+(defun conner--run-eat-command (plist &rest _)
+  (when (not (featurep 'eat))
+    (error "Eat is not installed or not loaded. Aborting"))
+  (let* ((command-name (plist-get plist :name))
+         (eat-buffer-name (concat "*conner-eat-" command-name "*")))
+    (eat (plist-get plist :command))))
 
 (provide 'conner)
 
