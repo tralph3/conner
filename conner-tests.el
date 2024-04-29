@@ -33,6 +33,10 @@
       (should (equal (getenv "VAR1") "someval"))
     (should (equal (getenv "VAR1") nil))))
 
+(defun fake-runner-check-default-dir (plist root-dir)
+  (should (equal default-directory
+                 (file-name-concat root-dir (plist-get plist :workdir)))))
+
 (ert-deftest conner-test-add-command ()
   (with-temp-env
    (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
@@ -167,4 +171,10 @@
   (with-temp-env
    (let ((conner-command-types-alist `(("test type" ,#'fake-runner-check-env))))
      (conner-add-command conner-root-dir '(:name "Run me" :command "should exist" :type "test type" :environment ("VAR1: someval")))
+     (conner-run-command conner-root-dir "Run me"))))
+
+(ert-deftest conner-test-change-workdir ()
+  (with-temp-env
+   (let ((conner-command-types-alist `(("workdirchange" ,#'fake-runner-check-default-dir))))
+     (conner-add-command conner-root-dir '(:name "Run me" :workdir "/relative/to/rootdir" :command "now" :type "workdirchange"))
      (conner-run-command conner-root-dir "Run me"))))
