@@ -2,7 +2,7 @@
 
 ;; Authors: Tomás Ralph <tomasralph2000@gmail.com>
 ;; Created: 2024
-;; Version: 0.3
+;; Version: 0.4
 ;; Package-Requires: ((emacs "28.1"))
 ;; Homepage: https://github.com/tralph3/conner
 ;; Keywords: tools
@@ -144,9 +144,60 @@ type with an associated function in `conner-command-types-alist'."
 (defvar conner--commands nil
   "List of commands of the last `conner-file-name' file read.")
 
+(defvar conner--command-template '(:name "Command name"
+                                         :command "The command to run"
+                                         :type "See available types in `conner-command-types-alist'"
+                                         :workdir nil
+                                         :environment ())
+  "Command template that's presented to the user when adding a new command.")
+
 (defun conner--construct-file-path (root-dir)
   "Return the path to ROOT-DIR's `conner-file-name'."
   (file-name-concat (expand-file-name root-dir) conner-file-name))
+
+(defun conner--is-valid-command-plist (plist)
+  "Return `t' if PLIST is a valid Conner command plist."
+  (and (plistp plist)
+       (stringp (plist-get plist :name))
+       (stringp (plist-get plist :command))
+       (or (stringp (plist-get plist :type))
+           (not (plist-get plist :type)))
+       (or (stringp (plist-get plist :workdir))
+           (not (plist-get plist :workdir)))
+       (or (listp (plist-get plist :environment))
+           (not (plist-get plist :environment)))))
+
+(defun conner--pp-plist (plist)
+  "Pretty print a plist using line breaks after every value."
+  (when (not (plistp plist))
+    (error "Not a valid plist."))
+  (with-temp-buffer
+    (let ((inhibit-message t)
+          (message-log-max nil))
+      (lisp-data-mode)
+      (insert (pp-to-string plist))
+      (goto-char (point-min))
+      (dotimes (i (proper-list-p plist))
+        (when (and (cl-evenp i) (not (eq i 0)))
+          (re-search-forward (pp (nth i plist)))
+          (goto-char (match-beginning 0))
+          (newline-and-indent)))
+      (buffer-string))))
+
+(defun conner--pp-plist-list (plist-list)
+  "Pretty print a list of plists using line breaks."
+  (with-temp-buffer
+    (let ((inhibit-message t)
+          (message-log-max nil))
+      (lisp-data-mode)
+      (insert "(")
+      (dolist (plist plist-list)
+        (insert (conner--pp-plist plist)))
+      (backward-delete-char-untabify 1)
+      (when (length> (buffer-string) 0)
+        (insert ")"))
+      (indent-region (point-min) (point-max))
+      (buffer-string))))
 
 (defun conner--construct-local-file-path (root-dir)
   "Return the path to the local conner file associated with ROOT-DIR."
@@ -199,8 +250,11 @@ to `local'."
                          (conner--construct-local-file-path root-dir)
                        (conner--construct-file-path root-dir))))
     (with-temp-buffer
-      (insert (pp conner--commands))
-      (write-file conner-file))))
+      (insert ";;; -*- lisp-data -*-\n")
+      (let ((print-length nil)
+            (print-level nil))
+        (insert (conner--pp-plist-list conner--commands))
+        (write-file conner-file)))))
 
 (defun conner--read-env-file (root-dir)
   "Read ROOT-DIR's `conner-env-file' and return a list of strings."
@@ -213,13 +267,13 @@ to `local'."
         (add-to-list 'conner--env-var-list (concat key "=" value))))
     conner--env-var-list))
 
-(defun conner--get-env-vars-in-buffer (regexp)
+(defun conner--get-env-vars-in-buffer ()
   "Get a list of all REGEXP matches in a buffer."
   (save-excursion
     (goto-char (point-min))
     (save-match-data
       (let (matches)
-        (while (re-search-forward regexp nil t)
+        (while (re-search-forward conner--env-var-regexp nil t)
           (push (list
                  (match-string-no-properties 1)
                  (or
@@ -234,16 +288,30 @@ to `local'."
   (with-temp-buffer
     (when (file-exists-p env-file-path)
       (insert-file-contents env-file-path))
-    (conner--get-env-vars-in-buffer conner--env-var-regexp)))
+    (conner--get-env-vars-in-buffer)))
+
+(defun conner--find-command-with-value (key value &optional plist-list)
+  "Find the plist in `conner--commands' where KEY has VALUE.
+
+If PLIST-LIST is non-nil, search it instead."
+  (cl-find-if (lambda (plist)
+                (equal value (plist-get plist key)))
+              (or plist-list conner--commands)))
+
+(defun conner--get-command-names ()
+  "Return a list of defined command names as strings."
+  (mapcar (lambda (plist) (plist-get plist :name)) conner--commands))
 
 (defun conner--command-annotation-function (candidate)
   "Get CANDIDATE's command and format for use in minibuffer annotation."
-  (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner--commands))))
+  (let* ((max-width (apply #'max (mapcar #'length (conner--get-command-names))))
          (indent (make-string (- max-width (length candidate)) ?\s))
          (command (car
                    (cl-remove-if #'string-blank-p
                                  (split-string
-                                  (cadr (assoc candidate conner--commands)) "\n"))))
+                                  (plist-get
+                                   (conner--find-command-with-value :name candidate)
+                                   :command) "\n"))))
          (tabs (make-string 6 ?\t)))
     (format "%s%s%s" indent tabs command)))
 
@@ -268,20 +336,33 @@ Pre-fill the prompt with INITIAL-INPUT if non-nil."
         (car types)
       (completing-read "Select command type: " types nil t initial-input))))
 
-(defun conner--prompt-for-command (&optional initial-input)
-  "Prompt the user to write out their desired command.
+(defun conner--edit-command (&optional command)
+  "Open a buffer for the user to edit COMMAND.
 
-Pre-fill the prompt with INITIAL-INPUT if non-nil.
+If COMMAND is not specified, a template is provided instead.
 
-This function remaps return to allow for easy insertion of
-newlines, simplifying the input of multiline commands."
-  (let ((keymap (copy-keymap minibuffer-local-map))
-        (resize-mini-windows t))
-    (define-key keymap (kbd "RET") #'newline)
-    (define-key keymap (kbd "C-c C-c") #'exit-minibuffer)
-    (define-key keymap (kbd "C-c C-k") #'abort-minibuffers)
-    (read-from-minibuffer "Enter command (C-c C-c to submit): "
-                          initial-input keymap)))
+Once finished, the command is verified to be valid with
+`conner--is-valid-command-plist'. If non-nil, the command is
+returned. Otherwise, an error is raised."
+  (let ((buffer (generate-new-buffer "*conner-edit-command*"))
+        (keymap (make-sparse-keymap)))
+    (switch-to-buffer buffer)
+    (lisp-data-mode)
+    (define-key keymap (kbd "C-c C-c") #'exit-recursive-edit)
+    (define-key keymap (kbd "C-c C-k") (lambda ()
+                                         (interactive)
+                                         (kill-buffer)
+                                         (abort-recursive-edit)))
+    (insert (conner--pp-plist (or command conner--command-template)))
+    (setq header-line-format "Edit, then exit with ‘C-c C-c’ or abort with ‘C-c C-k’")
+    (use-local-map keymap)
+    (recursive-edit)
+    (goto-char (point-min))
+    (let ((contents (read (current-buffer))))
+      (kill-buffer)
+      (if (conner--is-valid-command-plist contents)
+          contents
+        (error "Command is not a valid Conner command.")))))
 
 ;;;###autoload
 (defun conner-run-project-command (&optional project)
@@ -356,21 +437,20 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
          (process-environment (if conner-read-env-file
                                   (append (conner--read-env-file root-dir) process-environment)
                                 process-environment))
-         (names (mapcar #'car conner--commands))
-         (command-name (or command-name (completing-read "Select a command: " names)))
-         (element (assoc command-name conner--commands))
-         (command (cadr element))
-         (command-type (or (caddr element) conner-default-command-type))
+         (command-name (or command-name (completing-read "Select a command: " (conner--get-command-names))))
+         (plist (conner--find-command-with-value :name command-name))
+         (command-type (plist-get plist :type))
+         (command-workdir (plist-get plist :workdir))
          (command-func (cadr (assoc command-type conner-command-types-alist)))
-         (default-directory root-dir))
-    (funcall command-func command element root-dir)))
+         (default-directory (file-name-concat root-dir command-workdir)))
+    (funcall command-func plist root-dir)))
 
 ;;;###autoload
-(defun conner-add-command (root-dir &optional command-name command command-type)
-  "Add command COMMAND-NAME with value COMMAND.
+(defun conner-add-command (root-dir &optional command-plist)
+  "Add command COMMAND-PLIST.
 
-The user will be prompted for every optional parameter not
-specified.
+If no plist is provided, a buffer will open for the user to
+configure the command.
 
 Write to ROOT-DIR's `conner-file-name' by default.  If invoked
 with \\[universal-argument], write to a local file associated
@@ -379,17 +459,16 @@ with ROOT-DIR.
 This logic is inversed if `conner-default-file-behavior' is set
 to `local'."
   (interactive "D")
+  (when (and command-plist (not (conner--is-valid-command-plist command-plist)))
+    (error "Not a valid Conner command."))
   (if (or
        (and current-prefix-arg (eq conner-default-file-behavior 'project))
        (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
       (conner--update-commands-from-disk root-dir nil t)
     (conner--update-commands-from-disk root-dir t))
-  (let* ((command-name (or command-name (read-string "Enter command name: ")))
-         (command (or command (conner--prompt-for-command)))
-         (command-type (or command-type (conner--prompt-for-command-type)))
+  (let* ((new-command (or command-plist (conner--edit-command)))
          (updated-list
-          (conner--add-command-to-list
-           conner--commands command-name command command-type)))
+          (conner--add-command-to-list conner--commands new-command)))
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
@@ -414,15 +493,16 @@ to `local'."
     (conner--update-commands-from-disk root-dir t))
   (let* ((completion-extra-properties
           '(:annotation-function conner--command-annotation-function))
-         (names (mapcar #'car conner--commands))
+         (names (conner--get-command-names))
          (command-name (or command-name (completing-read "Delete command: " names)))
-         (updated-list (conner--delete-command-from-list conner--commands command-name)))
+         (plist (conner--find-command-with-value :name command-name))
+         (updated-list (conner--delete-command-from-list conner--commands plist)))
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
 ;;;###autoload
-(defun conner-update-command (root-dir &optional command-name new-name new-command new-command-type)
-  "Update command COMMAND-NAME to NEW-NAME, NEW-COMMAND and NEW-COMMAND-TYPE.
+(defun conner-update-command (root-dir &optional command-name new-command-plist)
+  "Update command COMMAND-NAME to NEW-COMMAND-PLIST.
 
 Command will be read from ROOT-DIR's `conner-file-name' by
 default.  If invoked with \\[universal-argument], read from a
@@ -444,51 +524,44 @@ instead."
     (conner--update-commands-from-disk root-dir t))
   (let* ((completion-extra-properties
           '(:annotation-function conner--command-annotation-function))
-         (names (mapcar #'car conner--commands))
+         (names (conner--get-command-names))
          (command-name (or command-name (completing-read "Update command: " names)))
-         (command (cadr (assoc command-name conner--commands)))
-         (command-type (caddr (assoc command-name conner--commands)))
-         (new-name (or new-name (read-string "Enter new name: " command-name)))
-         (new-command (or new-command (conner--prompt-for-command command)))
-         (new-command-type (or new-command-type (conner--prompt-for-command-type command-type)))
+         (command-plist (conner--find-command-with-value :name command-name))
+         (new-command (or new-command-plist (conner--edit-command (conner--find-command-with-value :name command-name))))
          (updated-list
           (conner--update-command-from-list
-           conner--commands command-name new-name new-command new-command-type)))
+           conner--commands command-plist new-command)))
     (setq conner--commands updated-list)
     (conner--write-commands root-dir)))
 
-(defun conner--add-command-to-list (command-list command-name command &optional command-type)
-  "Add command COMMAND-NAME with value COMMAND to COMMAND-LIST.
+(defun conner--add-command-to-list (command-list command-plist)
+  "Add command COMMAND-PLIST to COMMAND-LIST."
+  (if (and command-list
+       (conner--find-command-with-value
+        :name (plist-get command-plist :name) command-list))
+      (error "A command with this name already exists."))
+  (if (not (conner--is-valid-command-plist command-plist))
+      (error "Not a valid Conner command."))
+  (push command-plist command-list))
 
-If COMMAND-TYPE is nil, use `conner-default-command-type'
-instead."
-  (if (assoc command-name command-list)
-      (error "A command with this name already exists")
-    (push `(,command-name ,command ,(or command-type conner-default-command-type)) command-list)))
+(defun conner--delete-command-from-list (command-list command-plist)
+  "Delete COMMAND-PLIST from COMMAND-LIST."
+  (delete command-plist command-list))
 
-(defun conner--delete-command-from-list (command-list command-name)
-  "Delete command COMMAND-NAME from COMMAND-LIST."
-  (delete (assoc command-name command-list) command-list))
-
-(defun conner--update-command-from-list (command-list command-name new-name new-command new-command-type)
-  "Update command COMMAND-NAME from COMMAND-LIST.
-
-New values for the command will be NEW-NAME, NEW-COMMMAND and
-NEW-COMMAND-TYPE."
-  (let* ((command-deleted (conner--delete-command-from-list command-list command-name))
+(defun conner--update-command-from-list (command-list command-plist new-command-plist)
+  "Update command COMMAND-PLIST from COMMAND-LIST with NEW-COMMAND-PLIST."
+  (let* ((command-deleted (conner--delete-command-from-list command-list command-plist))
          (updated-list
           (conner--add-command-to-list
-           command-deleted new-name new-command new-command-type)))
+           command-deleted new-command-plist)))
     updated-list))
 
-(defun conner--run-compile-command (command element &rest _)
-  "Run the command COMMAND in an unique compilation buffer.
-
-Use ELEMENT to obtain the command name of the command."
-  (let* ((command-name (car element))
+(defun conner--run-compile-command (command-plist &rest _)
+  "Run the command COMMAND-PLIST in an unique compilation buffer."
+  (let* ((command-name (plist-get command-plist :name))
          (compilation-buffer-name-function
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
-    (compile command)))
+    (compile (plist-get command-plist :command))))
 
 
 (provide 'conner)

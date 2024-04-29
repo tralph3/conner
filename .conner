@@ -1,1 +1,6 @@
-(("Run tests" "emacs -Q -batch -l ert -l conner.el -l conner-tests.el -f ert-run-tests-batch-and-exit" "compile"))
+;;; -*- lisp-data -*-
+((:name "Run tests"
+        :command "emacs -Q -batch -l ert -l conner.el -l conner-tests.el -f ert-run-tests-batch-and-exit"
+        :type "compile"
+        :workdir nil
+        :environment nil))

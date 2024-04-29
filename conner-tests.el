@@ -22,54 +22,53 @@
 (defun get-local-conner-contents ()
   (conner--read-commands conner-local-file-path))
 
-(defun fake-command-runner (command element root-dir)
-  (should (equal command "now"))
-  (should (equal element '("Run me" "now" "test type")))
+(defun fake-command-runner (plist root-dir)
+  (should (equal (plist-get plist :name) "Run me"))
+  (should (equal (plist-get plist :command) "now"))
+  (should (equal (plist-get plist :type) "test type"))
   (should (equal root-dir conner-root-dir)))
 
-(defun fake-runner-check-env (command &rest _)
-  (if (equal command "should exist")
+(defun fake-runner-check-env (plist &rest _)
+  (if (equal (plist-get plist :command) "should exist")
       (should (equal (getenv "VAR1") "someval"))
     (should (equal (getenv "VAR1") nil))))
 
 (ert-deftest conner-test-add-command ()
   (with-temp-env
-   (conner-add-command conner-root-dir "New command" "echo \"test\"" "compile")
+   (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
    (should (equal (get-conner-contents)
-                  '(("New command" "echo \"test\"" "compile"))))))
+                  '((:name "New command" :command "echo \"test\"" :type "compile"))))))
 
 (ert-deftest conner-test-add-existing-command ()
   (with-temp-env
-   (conner-add-command conner-root-dir "Test command" "yes test" "compile")
-   (should-error (conner-add-command conner-root-dir "Test command" "other stuff" "compile"))))
+   (conner-add-command conner-root-dir '(:name "Test command" :command "echo \"test\"" :type "compile"))
+   (should-error (conner-add-command conner-root-dir '(:name "Test command" :command "echo \"test\"" :type "compile")))))
 
-(ert-deftest conner-test-add-with-default-command-type ()
+(ert-deftest conner-test-add-invalid-command ()
   (with-temp-env
-   (let ((conner-command-types-alist `(("new type" ,#'car)))
-         (conner-default-command-type "new type"))
-     (conner-add-command conner-root-dir "Some" "command")
-     (should (equal (get-conner-contents) '(("Some" "command" "new type")))))))
+   (should-error
+    (conner-add-command conner-root-dir '(:should "fail" :because "it" :lacks "name" :key)))))
 
 (ert-deftest conner-test-delete-command ()
   (with-temp-env
-   (conner-add-command conner-root-dir "Delete me" "please" "compile")
+   (conner-add-command conner-root-dir '(:name "Delete me" :command "please" :type "compile"))
    (conner-delete-command conner-root-dir "Delete me")
    (should (equal (get-conner-contents) nil))
-   (conner-add-command conner-root-dir "Don't delete" "me" "compile")
-   (conner-add-command conner-root-dir "Do delete" "me" "compile")
+   (conner-add-command conner-root-dir '(:name "Don't delete" :command "me" :type "compile"))
+   (conner-add-command conner-root-dir '(:name "Do delete" :command "me" :type "compile"))
    (conner-delete-command conner-root-dir "Do delete")
-   (should (equal (get-conner-contents) '(("Don't delete" "me" "compile"))))))
+   (should (equal (get-conner-contents) '((:name "Don't delete" :command "me" :type "compile"))))))
 
 (ert-deftest conner-test-update-command ()
   (with-temp-env
-   (conner-add-command conner-root-dir "Tpyo in nmae" "tpyo" "comple")
-   (conner-update-command conner-root-dir "Tpyo in nmae" "Typo in name" "typst" "compile")
-   (should (equal (get-conner-contents) '(("Typo in name" "typst" "compile"))))))
+   (conner-add-command conner-root-dir '(:name "Tpyo in nmae" :command "tpyo" :type "comple"))
+   (conner-update-command conner-root-dir "Tpyo in nmae" '(:name "Typo in name" :command "typst" :type "compile"))
+   (should (equal (get-conner-contents) '((:name "Typo in name" :command "typst" :type "compile"))))))
 
 (ert-deftest conner-test-run-command ()
   (with-temp-env
    (let ((conner-command-types-alist `(("test type" ,#'fake-command-runner))))
-     (conner-add-command conner-root-dir "Run me" "now" "test type")
+     (conner-add-command conner-root-dir '(:name "Run me" :command "now" :type "test type"))
      (conner-run-command conner-root-dir "Run me"))))
 
 (ert-deftest conner-test-construct-file-path ()
@@ -85,14 +84,14 @@
 (ert-deftest conner-test-add-local-command ()
   (with-temp-env
    (let ((current-prefix-arg 4))
-     (conner-add-command conner-root-dir "New command" "echo \"test\"" "compile")
+     (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
      (should (file-exists-p conner-local-file-path))
      (should-not (file-exists-p conner-file-path)))))
 
 (ert-deftest conner-test-delete-local-command ()
   (with-temp-env
    (let ((current-prefix-arg 4))
-     (conner-add-command conner-root-dir "New command" "echo \"test\"" "compile")
+     (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
      (conner-delete-command conner-root-dir "New command")
      (should (file-exists-p conner-local-file-path))
      (should-not (file-exists-p conner-file-path))
@@ -101,23 +100,24 @@
 (ert-deftest conner-test-update-local-command ()
   (with-temp-env
    (let ((current-prefix-arg 4))
-     (conner-update-command conner-root-dir "Old command" "New command" "echo \"test\"" "compile")
+     (conner-update-command conner-root-dir "Old command" '(:name "New command" :command "echo \"test\"" :type "compile"))
      (should (file-exists-p conner-local-file-path))
      (should-not (file-exists-p conner-file-path))
-     (should (equal (get-local-conner-contents) '(("New command" "echo \"test\"" "compile")))))))
+     (should (equal (get-local-conner-contents)
+                    '((:name "New command" :command "echo \"test\"" :type "compile")))))))
 
 (ert-deftest conner-test-run-local-command ()
   (with-temp-env
    (let ((current-prefix-arg 4)
          (conner-command-types-alist `(("test type" ,#'fake-command-runner))))
-     (conner-add-command conner-root-dir "Run me" "now" "test type")
+     (conner-add-command conner-root-dir '(:command "now" :name "Run me" :type "test type"))
      (conner-run-command conner-root-dir "Run me"))))
 
 (ert-deftest conner-test-read-env-file ()
   (with-temp-env
    (pollute-env-file)
    (let ((conner-command-types-alist `(("test type" ,#'fake-runner-check-env))))
-     (conner-add-command conner-root-dir "Run me" "should exist" "test type")
+     (conner-add-command conner-root-dir '(:name "Run me" :command "should exist" :type "test type"))
      (conner-run-command conner-root-dir "Run me"))))
 
 (ert-deftest conner-test-dont-read-env-file ()
@@ -125,14 +125,14 @@
    (pollute-env-file)
    (let ((conner-command-types-alist `(("test type" ,#'fake-runner-check-env)))
          (conner-read-env-file nil))
-     (conner-add-command conner-root-dir "Run me" "echo $VAR1" "test type")
+     (conner-add-command conner-root-dir '(:name "Run me" :command "echo $VAR1" :type "test type"))
      (conner-run-command conner-root-dir "Run me"))))
 
 (ert-deftest conner-test-add-local-command-with-default-behavior ()
   (with-temp-env
    (let ((current-prefix-arg 4)
          (conner-default-file-behavior 'local))
-     (conner-add-command conner-root-dir "New command" "echo \"test\"" "compile")
+     (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
      (should-not (file-exists-p conner-local-file-path))
      (should (file-exists-p conner-file-path)))))
 
@@ -140,7 +140,7 @@
   (with-temp-env
    (let ((current-prefix-arg 4)
          (conner-default-file-behavior 'local))
-     (conner-add-command conner-root-dir "New command" "echo \"test\"" "compile")
+     (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
      (conner-delete-command conner-root-dir "New command")
      (should-not (file-exists-p conner-local-file-path))
      (should (file-exists-p conner-file-path))
@@ -150,15 +150,15 @@
   (with-temp-env
    (let ((current-prefix-arg 4)
          (conner-default-file-behavior 'local))
-     (conner-update-command conner-root-dir "Old command" "New command" "echo \"test\"" "compile")
+     (conner-update-command conner-root-dir "Old command" '(:name "New command" :command "echo \"test\"" :type "compile"))
      (should-not (file-exists-p conner-local-file-path))
      (should (file-exists-p conner-file-path))
-     (should (equal (get-conner-contents) '(("New command" "echo \"test\"" "compile")))))))
+     (should (equal (get-conner-contents) '((:name "New command" :command "echo \"test\"" :type "compile")))))))
 
 (ert-deftest conner-test-run-local-command-with-default-behavior ()
   (with-temp-env
    (let ((current-prefix-arg 4)
          (conner-default-file-behavior 'local)
          (conner-command-types-alist `(("test type" ,#'fake-command-runner))))
-     (conner-add-command conner-root-dir "Run me" "now" "test type")
+     (conner-add-command conner-root-dir '(:name "Run me" :command "now" :type "test type"))
      (conner-run-command conner-root-dir "Run me"))))
