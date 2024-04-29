@@ -3,7 +3,7 @@
 ;; Authors: Tomás Ralph <tomasralph2000@gmail.com>
 ;; Created: 2024
 ;; Version: 0.4
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "29.1"))
 ;; Homepage: https://github.com/tralph3/conner
 ;; Keywords: tools
 
@@ -156,7 +156,7 @@ type with an associated function in `conner-command-types-alist'."
   (file-name-concat (expand-file-name root-dir) conner-file-name))
 
 (defun conner--is-valid-command-plist (plist)
-  "Return `t' if PLIST is a valid Conner command plist."
+  "Return t if PLIST is a valid Conner command plist."
   (and (plistp plist)
        (stringp (plist-get plist :name))
        (stringp (plist-get plist :command))
@@ -168,9 +168,9 @@ type with an associated function in `conner-command-types-alist'."
            (not (plist-get plist :environment)))))
 
 (defun conner--pp-plist (plist)
-  "Pretty print a plist using line breaks after every value."
+  "Pretty print PLIST using line breaks after every value."
   (when (not (plistp plist))
-    (error "Not a valid plist."))
+    (error "Not a valid plist"))
   (with-temp-buffer
     (let ((inhibit-message t)
           (message-log-max nil))
@@ -185,7 +185,7 @@ type with an associated function in `conner-command-types-alist'."
       (buffer-string))))
 
 (defun conner--pp-plist-list (plist-list)
-  "Pretty print a list of plists using line breaks."
+  "Pretty print PLIST-LIST using line breaks."
   (with-temp-buffer
     (let ((inhibit-message t)
           (message-log-max nil))
@@ -342,8 +342,8 @@ Pre-fill the prompt with INITIAL-INPUT if non-nil."
 If COMMAND is not specified, a template is provided instead.
 
 Once finished, the command is verified to be valid with
-`conner--is-valid-command-plist'. If non-nil, the command is
-returned. Otherwise, an error is raised."
+`conner--is-valid-command-plist'.  If non-nil, the command is
+returned.  Otherwise, an error is raised."
   (let ((buffer (generate-new-buffer "*conner-edit-command*"))
         (keymap (make-sparse-keymap)))
     (switch-to-buffer buffer)
@@ -362,7 +362,7 @@ returned. Otherwise, an error is raised."
       (kill-buffer)
       (if (conner--is-valid-command-plist contents)
           contents
-        (error "Command is not a valid Conner command.")))))
+        (error "Command is not a valid Conner command")))))
 
 ;;;###autoload
 (defun conner-run-project-command (&optional project)
@@ -460,7 +460,7 @@ This logic is inversed if `conner-default-file-behavior' is set
 to `local'."
   (interactive "D")
   (when (and command-plist (not (conner--is-valid-command-plist command-plist)))
-    (error "Not a valid Conner command."))
+    (error "Not a valid Conner command"))
   (if (or
        (and current-prefix-arg (eq conner-default-file-behavior 'project))
        (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
@@ -539,9 +539,9 @@ instead."
   (if (and command-list
        (conner--find-command-with-value
         :name (plist-get command-plist :name) command-list))
-      (error "A command with this name already exists."))
+      (error "A command with this name already exists"))
   (if (not (conner--is-valid-command-plist command-plist))
-      (error "Not a valid Conner command."))
+      (error "Not a valid Conner command"))
   (push command-plist command-list))
 
 (defun conner--delete-command-from-list (command-list command-plist)
