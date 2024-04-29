@@ -51,9 +51,6 @@
 
 (require 'project)
 
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.conner" . emacs-lisp-mode))
-
 (defgroup conner nil
   "Conner is a Command Runner for GNU Emacs."
   :link '(url-link :tag "Homepage" "https://github.com/tralph3/conner")
@@ -94,26 +91,19 @@ local file by default, and you will need to pass
                  (const :tag "Local file" local)))
 
 (defcustom conner-command-types-alist
-  `(("compile" ,#'conner--run-compile-command "Run command in an unique compilation buffer."))
+  `(("compile" ,#'conner--run-compile-command))
   "Alist of command types and their associated functions.
 
 You can add your own command types here.  Each associated function
-will be given three arguments in the following order:
+will be given two arguments.
 
-1. COMMAND, which is the string representing the command to run.
+1. PLIST, which is the plist that represents the command that has
+been called. You can use `plist-get' to fetch data from it.
 
-2. ELEMENT, which is the element stored in the list containing all
-the data related to this command.
-
-3. ROOT-DIR, which is the path given to `conner-run-command'.
-
-Additionally, each entry can optionally specify a string
-explaining the type which will then be displayed as an annotation
-in the minibuffer for completing read operations."
+2. ROOT-DIR, which is the path given to `conner-run-command'."
   :type '(repeat (list
                   (string :tag "Type name")
-                  (function :tag "Handler function")
-                  (string :tag "Comment"))))
+                  (function :tag "Handler function"))))
 
 (defcustom conner-default-command-type "compile"
   "Command type to use when not specified otherwise.
@@ -148,7 +138,7 @@ type with an associated function in `conner-command-types-alist'."
                                          :command "The command to run"
                                          :type "See available types in `conner-command-types-alist'"
                                          :workdir nil
-                                         :environment ())
+                                         :environment nil)
   "Command template that's presented to the user when adding a new command.")
 
 (defun conner--construct-file-path (root-dir)
@@ -314,27 +304,6 @@ If PLIST-LIST is non-nil, search it instead."
                                    :command) "\n"))))
          (tabs (make-string 6 ?\t)))
     (format "%s%s%s" indent tabs command)))
-
-(defun conner--command-type-annotation-function (candidate)
-  "Get CANDIDATE's type comment and format for use in minibuffer annotation."
-  (let* ((max-width (apply #'max (mapcar #'length (mapcar #'car conner-command-types-alist))))
-         (indent (make-string (- max-width (length candidate)) ?\s))
-         (type-comment (caddr (assoc candidate conner-command-types-alist)))
-         (tabs (make-string 6 ?\t)))
-    (format "%s%s%s" indent tabs (or type-comment ""))))
-
-(defun conner--prompt-for-command-type (&optional initial-input)
-  "Prompt the user to select one of the available command types.
-
-If there is only one candidate, select it automatically.
-
-Pre-fill the prompt with INITIAL-INPUT if non-nil."
-  (let ((completion-extra-properties
-         '(:annotation-function conner--command-type-annotation-function))
-        (types (mapcar #'car conner-command-types-alist)))
-    (if (equal (length types) 1)
-        (car types)
-      (completing-read "Select command type: " types nil t initial-input))))
 
 (defun conner--edit-command (&optional command)
   "Open a buffer for the user to edit COMMAND.
