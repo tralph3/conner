@@ -146,8 +146,8 @@ type with an associated function in `conner-command-types-alist'."
   "Return the path to ROOT-DIR's `conner-file-name'."
   (file-name-concat (expand-file-name root-dir) conner-file-name))
 
-(defun conner--is-valid-command-plist (plist)
-  "Return t if PLIST is a valid Conner command plist."
+(defun conner--validate-command-plist (plist)
+  "Throw an error if PLIST is an invalid Conner command."
   (let ((command-types (mapcar #'car conner-command-types-alist)))
     (when (not (plistp plist))
       (error "Not a plist"))
@@ -165,8 +165,7 @@ type with an associated function in `conner-command-types-alist'."
       (error "Workdir is not a string"))
     (when (not (or (listp (plist-get plist :environment))
                    (not (plist-get plist :environment))))
-      (error "Environment is not a list"))
-    t))
+      (error "Environment is not a list"))))
 
 
 (defun conner--pp-plist (plist)
@@ -323,8 +322,8 @@ If PLIST-LIST is non-nil, search it instead."
 If COMMAND is not specified, a template is provided instead.
 
 Once finished, the command is verified to be valid with
-`conner--is-valid-command-plist'.  If non-nil, the command is
-returned.  Otherwise, an error is raised."
+`conner--validate-command-plist'.  If no error is raise, the
+command is returned."
   (let ((buffer (generate-new-buffer "*conner-edit-command*"))
         (keymap (make-sparse-keymap)))
     (switch-to-buffer buffer)
@@ -341,9 +340,8 @@ returned.  Otherwise, an error is raised."
     (goto-char (point-min))
     (let ((contents (read (current-buffer))))
       (kill-buffer)
-      (if (conner--is-valid-command-plist contents)
-          contents
-        (error "Command is not a valid Conner command")))))
+      (conner--validate-command-plist contents)
+      contents)))
 
 ;;;###autoload
 (defun conner-run-project-command (&optional project)
@@ -440,8 +438,8 @@ with ROOT-DIR.
 This logic is inversed if `conner-default-file-behavior' is set
 to `local'."
   (interactive "D")
-  (when (and command-plist (not (conner--is-valid-command-plist command-plist)))
-    (error "Not a valid Conner command"))
+  (when command-plist
+    (conner--validate-command-plist command-plist))
   (if (or
        (and current-prefix-arg (eq conner-default-file-behavior 'project))
        (and (not current-prefix-arg) (eq conner-default-file-behavior 'local)))
@@ -517,12 +515,11 @@ instead."
 
 (defun conner--add-command-to-list (command-list command-plist)
   "Add command COMMAND-PLIST to COMMAND-LIST."
+  (conner--validate-command-plist command-plist)
   (if (and command-list
        (conner--find-command-with-value
         :name (plist-get command-plist :name) command-list))
       (error "A command with this name already exists"))
-  (if (not (conner--is-valid-command-plist command-plist))
-      (error "Not a valid Conner command"))
   (push command-plist command-list))
 
 (defun conner--delete-command-from-list (command-list command-plist)
