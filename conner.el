@@ -277,7 +277,7 @@ For more details read `format-spec'."
                `((?f . ,(file-name-nondirectory (or (buffer-file-name) "")))
                  (?F . ,(or (buffer-file-name) ""))
                  (?d . ,(expand-file-name default-directory))
-                 (?a . ,(lambda () (read-string "Argument: ")))) 'ignore))
+                 (?a . ,(lambda () (read-string "Argument: "))))))
 
 (defun conner--construct-env-var-list (env-alist)
   "Return a list of strings in the form VAR=val.

@@ -182,5 +182,6 @@
 (ert-deftest conner-test-expand-command ()
   (with-temp-env
    (let ((default-directory "/test/path"))
-     (should (equal (conner-expand-command "Expand: %d. This does not: %%d. This doesn't fail: %z. Escape percent: %%")
-                    "Expand: /test/path. This does not: %d. This doesn't fail: %z. Escape percent: %")))))
+     (should (equal (conner-expand-command "Expand: %d. This does not: %%d. Escape percent: %%")
+                    "Expand: /test/path. This does not: %d. Escape percent: %"))
+     (should-error (conner-expand-command "Non-existent specifier %z")))))
