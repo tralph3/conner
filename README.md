@@ -39,15 +39,32 @@ what's available doesn't quite suit your needs.
 ## Usage
 
 To add a command, simply execute `M-x conner-add-project-command` or
-`M-x conner-add-command`. Once defined, run the command using `M-x
-conner-run-project-command` or `M-x conner-run-command`.
+`M-x conner-add-command`. A new buffer will open where you can edit
+your command. These are the available keys:
 
-By default, each command gets defined with the `compile` type. This
-can be changed by modifying `conner-default-command-type`.
+- `:name` The name of the command. Will be used for `completing-read`
+  calls and to name the buffer where it's executed. Must be a string.
+- `:command` The command to run. Its interpretation will vary
+  depending on the runner. It supports format specifiers that are
+  calculated at runtime. Read `conner-expand-command` for
+  details. Must be a string.
+- `:type` The type decides which runner to call when executing the
+  command. See `conner-command-types-alist` for available types. Must
+  be a string.
+- `:workdir` Specifies a working directory from where to run the
+  command. The directory is relative to the root directory of the
+  project. Must be a string.
+- `:environment` List of strings containing environment variables in
+  the form of "KEY=value". These variables will be accesible to the
+  command they are declared in only. Must be a list.
 
-Compile commands run on their own compilation buffer. This design
-allows concurrent execution of multiple commands, useful if you run
-commands with a long run time, or commands that don't exit at all.
+Note that `:name`, `:command`, and `:type` are the only keys that must
+be defined. The rest are optional. If you wish to not provide a value,
+you must either provide `nil` or remove them altogheter. A key with an
+emtpy value is not a valid plist.
+
+Once defined, run the command using `M-x conner-run-project-command`
+or `M-x conner-run-command`.
 
 
 ## Local Conner files
