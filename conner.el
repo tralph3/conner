@@ -599,6 +599,13 @@ instead."
   "Run the command PLIST in an unique and interactive eat buffer."
   (when (not (featurep 'eat))
     (error "Eat is not installed or not loaded.  Aborting"))
+      (let* ((command-name (plist-get plist :name))
+             (buffer-name (concat "*conner-eat-" command-name "*"))
+             (buffer (get-buffer-create buffer-name))
+             (command (conner--expand-command (plist-get plist :command))))
+        (switch-to-buffer buffer)
+        (eat-mode)
+        (eat-exec buffer command-name "bash" nil `("-c" ,command))))))
 (defun conner--run-term-command (plist &rest _)
   "Run the command PLIST in an unique and interactive term buffer."
   (let* ((command-name (plist-get plist :name))
