@@ -72,9 +72,9 @@ access to project files.
 
 ## Command types
 
-While Conner ships with the `compile` command type, you can define
-custom types tailored to your requirements. Adding a custom command
-type is straightforward:
+While Conner ships with the `compile`, `eat`, and `term` command
+types, you can define custom types tailored to your
+requirements. Adding a custom command type is straightforward:
 
 1. Define a function to execute the command.
 2. Register the function in `conner-command-types-alist`.
@@ -85,7 +85,8 @@ directory. This directory corresponds to the directory with which
 `conner-run-command` was originally invoked.
 
 Below is an example of a custom command type for running commands in
-the [eat](https://codeberg.org/akib/emacs-eat) terminal:
+the [eat](https://codeberg.org/akib/emacs-eat) terminal. This is an
+old implementation:
 
 ```emacs-lisp
 (defun conner--run-eat-command (plist &rest _)
