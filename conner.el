@@ -107,15 +107,6 @@ been called.  You can use `plist-get' to fetch data from it.
                   (string :tag "Type name")
                   (function :tag "Handler function"))))
 
-(defcustom conner-default-command-type "compile"
-  "Command type to use when not specified otherwise.
-
-This value will be used when adding or reading commands that
-don't have their commands types specified.  As such this value
-must never be nil, and should always resolve to a valid command
-type with an associated function in `conner-command-types-alist'."
-  :type 'string)
-
 (defvar conner--env-var-regexp
   (rx
    line-start
