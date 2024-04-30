@@ -257,6 +257,37 @@ to `local'."
         (insert (conner--pp-plist-list conner--commands))
         (write-file conner-file)))))
 
+(defun conner--expand-command (command)
+  "Expand COMMAND's specs to their final values.
+
+The spec is defined as follows:
+
+* %f: Filename from where the command was called.
+* %F: Full path to the filename from where the command was called.
+* %d: Project root directory.
+* %a: Arbitrary argument.  User will be prompted for completion.
+
+As with any `format' function, flags are supported in the
+following format:
+
+  %<flags><width><precision>character
+
+Allowed flags are:
+
+* 0: Pad to the width, if given, with zeros instead of spaces.
+* -: Pad to the width, if given, on the right instead of the left.
+* <: Truncate to the width and precision, if given, on the left.
+* >: Truncate to the width and precision, if given, on the right.
+* ^: Convert to upper case.
+* _: Convert to lower case.
+
+For more details read `format-spec'."
+  (format-spec command
+               `((?f . ,(file-name-nondirectory (or (buffer-file-name) "")))
+                 (?F . ,(or (buffer-file-name) ""))
+                 (?d . ,(expand-file-name default-directory))
+                 (?a . ,(lambda () (read-string "Argument: "))))))
+
 (defun conner--construct-env-var-list (env-alist)
   "Return a list of strings in the form VAR=val.
 
@@ -561,7 +592,7 @@ instead."
   (let* ((command-name (plist-get plist :name))
          (compilation-buffer-name-function
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
-    (compile (plist-get plist :command))))
+    (compile (conner--expand-command (plist-get plist :command)))))
 
 (defun conner--run-eat-command (plist &rest _)
   "Run the command PLIST in an unique and interactive eat buffer."
@@ -569,7 +600,7 @@ instead."
     (error "Eat is not installed or not loaded.  Aborting"))
   (let* ((command-name (plist-get plist :name))
          (eat-buffer-name (concat "*conner-eat-" command-name "*")))
-    (eat (plist-get plist :command))))
+    (eat (conner--expand-command (plist-get plist :command)))))
 
 (provide 'conner)
 

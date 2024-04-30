@@ -89,16 +89,19 @@ the [eat](https://codeberg.org/akib/emacs-eat) terminal:
 
 ```emacs-lisp
 (defun conner--run-eat-command (plist &rest _)
+  "Run the command PLIST in an unique and interactive eat buffer."
   (when (not (featurep 'eat))
-    (error "Eat is not installed or not loaded. Aborting"))
+    (error "Eat is not installed or not loaded.  Aborting"))
   (let* ((command-name (plist-get plist :name))
          (eat-buffer-name (concat "*conner-eat-" command-name "*")))
-    (eat (plist-get plist :command))))
+    (eat (conner--expand-command (plist-get plist :command)))))
 
 (add-to-list 'conner-command-types-alist
              `("eat" ,#'conner--run-eat-command))
 ```
 
+Do make sure to call `conner--expand-command` before running the
+command to ensure each format spec gets expanded as needed.
 
 ## Acknowledgments
 

@@ -178,3 +178,9 @@
    (let ((conner-command-types-alist `(("workdirchange" ,#'fake-runner-check-default-dir))))
      (conner-add-command conner-root-dir '(:name "Run me" :workdir "/relative/to/rootdir" :command "now" :type "workdirchange"))
      (conner-run-command conner-root-dir "Run me"))))
+
+(ert-deftest conner-test-expand-command ()
+  (with-temp-env
+   (let ((default-directory "/test/path"))
+     (should (equal (conner--expand-command "Expand: %d. This does not: %%d")
+                    "Expand: /test/path. This does not: %d")))))
