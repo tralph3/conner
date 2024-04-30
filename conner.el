@@ -353,13 +353,29 @@ If PLIST-LIST is non-nil, search it instead."
          (tabs (make-string 6 ?\t)))
     (format "%s%s%s" indent tabs command)))
 
+(defun conner--edit-move-to-next-command ()
+  "Move and select the next value in command plist."
+  (interactive)
+  (re-search-forward "^\\(:?(\\| *\\):[[:alnum:]]+")
+  (forward-char 1)
+  (push-mark nil t t)
+  (forward-sexp))
+
+(defun conner--edit-move-to-prev-command ()
+  "Move and select the previous value in command plist."
+  (interactive)
+  (re-search-backward "^\\(:?(\\| *\\):[[:alnum:]]+")
+  (re-search-backward "^\\(:?(\\| *\\):[[:alnum:]]+")
+  (move-beginning-of-line nil)
+  (conner--edit-move-to-next-command))
+
 (defun conner--edit-command (&optional command)
   "Open a buffer for the user to edit COMMAND.
 
 If COMMAND is not specified, a template is provided instead.
 
 Once finished, the command is verified to be valid with
-`conner--validate-command-plist'.  If no error is raise, the
+`conner--validate-command-plist'.  If no error is raised, the
 command is returned."
   (let ((buffer (generate-new-buffer "*conner-edit-command*"))
         (keymap (make-sparse-keymap)))
@@ -370,14 +386,12 @@ command is returned."
                                          (interactive)
                                          (kill-buffer)
                                          (abort-recursive-edit)))
+    (define-key keymap (kbd "<tab>") #'conner--edit-move-to-next-command)
+    (define-key keymap (kbd "<backtab>") #'conner--edit-move-to-prev-command)
     (insert (conner--pp-plist (or command conner--command-template)))
     (goto-char (point-min))
-    (when (not command)
-      (re-search-forward ":name \"")
-      (push-mark nil t t)
-      (re-search-forward "\"")
-      (backward-char 1))
-    (setq header-line-format "Edit, then exit with ‘C-c C-c’ or abort with ‘C-c C-k’")
+    (conner--edit-move-to-next-command)
+    (setq header-line-format "Submit with ‘C-c C-c’ or abort with ‘C-c C-k’. ‘<tab>‘ and ‘<backtab>‘ for navigation.")
     (use-local-map keymap)
     (recursive-edit)
     (goto-char (point-min))
