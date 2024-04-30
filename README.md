@@ -101,7 +101,7 @@ old implementation:
              `("eat" ,#'conner--run-eat-command))
 ```
 
-Do make sure to call `conner--expand-command` before running the
+Do make sure to call `conner-expand-command` before running the
 command to ensure each format spec gets expanded as needed.
 
 ## Acknowledgments

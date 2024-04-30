@@ -248,7 +248,7 @@ to `local'."
         (insert (conner--pp-plist-list conner--commands))
         (write-file conner-file)))))
 
-(defun conner--expand-command (command)
+(defun conner-expand-command (command)
   "Expand COMMAND's specs to their final values.
 
 The spec is defined as follows:
@@ -583,7 +583,7 @@ instead."
   (let* ((command-name (plist-get plist :name))
          (compilation-buffer-name-function
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
-    (compile (conner--expand-command (plist-get plist :command)))))
+    (compile (conner-expand-command (plist-get plist :command)))))
 
 (defun conner--run-eat-command (plist &rest _)
   "Run the command PLIST in an unique and interactive eat buffer."
@@ -593,7 +593,7 @@ instead."
       (let* ((command-name (plist-get plist :name))
              (buffer-name (concat "*conner-eat-" command-name "*"))
              (buffer (get-buffer-create buffer-name))
-             (command (conner--expand-command (plist-get plist :command))))
+             (command (conner-expand-command (plist-get plist :command))))
         (switch-to-buffer buffer)
         (eat-mode)
         (eat-exec buffer command-name "bash" nil `("-c" ,command))))))
@@ -603,7 +603,7 @@ instead."
   (let* ((command-name (plist-get plist :name))
          (buffer-name (concat "*conner-term-" command-name "*"))
          (buffer (get-buffer-create buffer-name))
-         (command (conner--expand-command (plist-get plist :command))))
+         (command (conner-expand-command (plist-get plist :command))))
     (switch-to-buffer buffer)
     (term-mode)
     (term-exec buffer command-name "bash" nil `("-c" ,command))))
