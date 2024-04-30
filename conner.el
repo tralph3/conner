@@ -92,6 +92,7 @@ local file by default, and you will need to pass
 
 (defcustom conner-command-types-alist
   `(("compile" ,#'conner--run-compile-command)
+    ("term" ,#'conner--run-term-command)
     ("eat" ,#'conner--run-eat-command))
   "Alist of command types and their associated functions.
 
@@ -598,9 +599,15 @@ instead."
   "Run the command PLIST in an unique and interactive eat buffer."
   (when (not (featurep 'eat))
     (error "Eat is not installed or not loaded.  Aborting"))
+(defun conner--run-term-command (plist &rest _)
+  "Run the command PLIST in an unique and interactive term buffer."
   (let* ((command-name (plist-get plist :name))
-         (eat-buffer-name (concat "*conner-eat-" command-name "*")))
-    (eat (conner--expand-command (plist-get plist :command)))))
+         (buffer-name (concat "*conner-term-" command-name "*"))
+         (buffer (get-buffer-create buffer-name))
+         (command (conner--expand-command (plist-get plist :command))))
+    (switch-to-buffer buffer)
+    (term-mode)
+    (term-exec buffer command-name "bash" nil `("-c" ,command))))
 
 (provide 'conner)
 
