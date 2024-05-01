@@ -93,7 +93,8 @@ local file by default, and you will need to pass
 (defcustom conner-command-types-alist
   `(("compile" ,#'conner--run-compile-command)
     ("term" ,#'conner--run-term-command)
-    ("eat" ,#'conner--run-eat-command))
+    ("eat" ,#'conner--run-eat-command)
+    ("vterm" ,#'conner--run-vterm-command))
   "Alist of command types and their associated functions.
 
 You can add your own command types here.  Each associated function
@@ -621,6 +622,22 @@ instead."
     (switch-to-buffer buffer)
     (term-mode)
     (term-exec buffer command-name "bash" nil `("-c" ,command))))
+
+(defun conner--run-vterm-command (plist &rest _)
+  "Run the command PLIST in an unique and interactive vterm buffer."
+  (if (not (featurep 'vterm))
+      (conner--run-term-command plist)
+    (progn
+      (let* ((command-name (plist-get plist :name))
+             (buffer-name (concat "*conner-vterm-" command-name "*"))
+             (buffer (get-buffer buffer-name))
+             (vterm-kill-buffer-on-exit nil)
+             (command (conner-expand-command (plist-get plist :command)))
+             (vterm-shell (concat "bash -c '" command ";exit'")))
+        (when buffer
+          (kill-buffer buffer))
+        (switch-to-buffer (generate-new-buffer buffer-name))
+        (vterm-mode)))))
 
 (provide 'conner)
 

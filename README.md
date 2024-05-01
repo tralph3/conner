@@ -89,8 +89,8 @@ access to project files.
 
 ## Command types
 
-While Conner ships with the `compile`, `eat`, and `term` command
-types, you can define custom types tailored to your
+While Conner ships with the `compile`, `eat`, `vterm`, and `term`
+command types, you can define custom types tailored to your
 requirements. Adding a custom command type is straightforward:
 
 1. Define a function to execute the command.
