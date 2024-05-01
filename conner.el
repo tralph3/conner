@@ -601,7 +601,9 @@ instead."
     (compile (conner-expand-command (plist-get plist :command)))))
 
 (defun conner--run-eat-command (plist &rest _)
-  "Run the command PLIST in an unique and interactive eat buffer."
+  "Run the command PLIST in an unique and interactive eat buffer.
+
+If eat is not loaded, fallback on term instead."
   (if (not (featurep 'eat))
       (conner--run-term-command plist)
     (progn
@@ -624,7 +626,9 @@ instead."
     (term-exec buffer command-name "bash" nil `("-c" ,command))))
 
 (defun conner--run-vterm-command (plist &rest _)
-  "Run the command PLIST in an unique and interactive vterm buffer."
+  "Run the command PLIST in an unique and interactive vterm buffer.
+
+If vterm is not loaded, fallback on term instead."
   (if (not (featurep 'vterm))
       (conner--run-term-command plist)
     (progn
