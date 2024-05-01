@@ -357,10 +357,17 @@ If PLIST-LIST is non-nil, search it instead."
 (defun conner--edit-move-to-next-command ()
   "Move and select the next value in command plist."
   (interactive)
-  (re-search-forward "^\\(:?(\\| *\\):[[:alnum:]]+")
-  (forward-char 1)
+  (re-search-forward "^\\(:?(\\| *\\):[[:alnum:]]+ ")
   (push-mark nil t t)
-  (forward-sexp))
+  (setq-local next-char (char-to-string (char-after)))
+  (forward-sexp)
+  (when (member next-char '("\"" "[" "("))
+    (let ((rbeg (region-beginning))
+          (rend (region-end)))
+      (goto-char rbeg)
+      (forward-char 1)
+      (push-mark nil t t)
+      (goto-char (1- rend)))))
 
 (defun conner--edit-move-to-prev-command ()
   "Move and select the previous value in command plist."
