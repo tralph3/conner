@@ -364,8 +364,7 @@ If PLIST-LIST is non-nil, search it instead."
   (when (member next-char '("\"" "[" "("))
     (let ((rbeg (region-beginning))
           (rend (region-end)))
-      (goto-char rbeg)
-      (forward-char 1)
+      (goto-char (1+ rbeg))
       (push-mark nil t t)
       (goto-char (1- rend)))))
 
@@ -399,7 +398,7 @@ command is returned."
     (insert (conner--pp-plist (or command conner--command-template)))
     (goto-char (point-min))
     (conner--edit-move-to-next-command)
-    (setq header-line-format "Submit with ‘C-c C-c’ or abort with ‘C-c C-k’. ‘<tab>‘ and ‘<backtab>‘ for navigation.")
+    (setq header-line-format "Submit with ‘C-c C-c’ or abort with ‘C-c C-k’. Use ‘<tab>‘ and ‘<backtab>‘ to navigate.")
     (use-local-map keymap)
     (recursive-edit)
     (goto-char (point-min))
