@@ -185,3 +185,15 @@
      (should (equal (conner-expand-command "Expand: %d. This does not: %%d. Escape percent: %%")
                     "Expand: /test/path. This does not: %d. Escape percent: %"))
      (should-error (conner-expand-command "Non-existent specifier %z")))))
+
+(ert-deftest conner-test-validate-command ()
+  (with-temp-env
+   (should-error (conner--validate-command-plist '("Not" "a" "plist")))
+   (should-error (conner--validate-command-plist '(:name notstring :command "test" :type "compile")))
+   (should-error (conner--validate-command-plist '(:name "name" :type "compile")))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type notstring)))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "invalidtype")))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :workdir notstring)))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :environment notlist)))
+   (should (eq (conner--validate-command-plist '(:name "name" :command symbol :type "compile")) nil))
+   (should (eq (conner--validate-command-plist '(:name "name" :command "test" :type "compile")) nil))))

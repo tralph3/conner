@@ -112,7 +112,7 @@ old implementation:
     (error "Eat is not installed or not loaded.  Aborting"))
   (let* ((command-name (plist-get plist :name))
          (eat-buffer-name (concat "*conner-eat-" command-name "*")))
-    (eat (conner--expand-command (plist-get plist :command)))))
+    (eat (conner-expand-command (plist-get plist :command)))))
 
 (add-to-list 'conner-command-types-alist
              `("eat" ,#'conner--run-eat-command))

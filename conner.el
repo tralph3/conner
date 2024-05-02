@@ -92,6 +92,7 @@ local file by default, and you will need to pass
 
 (defcustom conner-command-types-alist
   `(("compile" ,#'conner--run-compile-command)
+    ("elispf" ,#'conner--run-elispf-command)
     ("term" ,#'conner--run-term-command)
     ("eat" ,#'conner--run-eat-command)
     ("vterm" ,#'conner--run-vterm-command))
@@ -146,9 +147,9 @@ been called.  You can use `plist-get' to fetch data from it.
       (error "Not a plist"))
     (when (not (stringp (plist-get plist :name)))
       (error "Name is not a string"))
-    (when (not (stringp (plist-get plist :command)))
-      (error "Command is not a string"))
-    (when (not (stringp (plist-get plist :command)))
+    (when (not (plist-get plist :command))
+      (error "Command not specified"))
+    (when (not (stringp (plist-get plist :type)))
       (error "Type is not a string"))
     (when (not (member (plist-get plist :type) command-types))
       (error "Unknown command type"))
@@ -158,7 +159,6 @@ been called.  You can use `plist-get' to fetch data from it.
     (when (not (or (listp (plist-get plist :environment))
                    (not (plist-get plist :environment))))
       (error "Environment is not a list"))))
-
 
 (defun conner--pp-plist (plist)
   "Pretty print PLIST using line breaks after every value."
@@ -349,9 +349,10 @@ If PLIST-LIST is non-nil, search it instead."
          (command (car
                    (cl-remove-if #'string-blank-p
                                  (split-string
-                                  (plist-get
-                                   (conner--find-command-with-value :name candidate)
-                                   :command) "\n"))))
+                                  (format "%s"
+                                          (plist-get
+                                           (conner--find-command-with-value :name candidate)
+                                           :command)) "\n"))))
          (tabs (make-string 6 ?\t)))
     (format "%s%s%s" indent tabs command)))
 
@@ -649,6 +650,13 @@ If vterm is not loaded, fallback on term instead."
           (kill-buffer buffer))
         (switch-to-buffer (generate-new-buffer buffer-name))
         (vterm-mode)))))
+
+(defun conner--run-elispf-command (plist &rest _)
+  "Run the command PLIST as an Emacs lisp function.
+
+The function takes no arguments."
+  (let ((command (plist-get plist :command)))
+    (funcall command)))
 
 (provide 'conner)
 
