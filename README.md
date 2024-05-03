@@ -131,7 +131,7 @@ You will then be able to define commands with type `print`.
 
 Do make sure to use the result of `conner-expand-command` as the
 command to run to ensure each format specifier gets expanded. If not
-applicable to your command, it can of course be omitted.
+applicable to your runner, it can of course be omitted.
 
 ## Acknowledgments
 
