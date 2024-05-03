@@ -145,25 +145,25 @@ been called.  You can use `plist-get' to fetch data from it.
   "Throw an error if PLIST is an invalid Conner command."
   (let ((command-types (mapcar #'car conner-command-types-alist)))
     (when (not (plistp plist))
-      (error "Not a plist.  Ensure each key has a value"))
+      (user-error "Not a plist.  Ensure each key has a value"))
     (when (not (plist-get plist :name))
-      (error "Name not specified.  Add a :name key"))
+      (user-error "Name not specified.  Add a :name key"))
     (when (not (stringp (plist-get plist :name)))
-      (error "Name is not a string"))
+      (user-error "Name is not a string"))
     (when (not (plist-get plist :command))
-      (error "Command not specified.  Add a :command key"))
+      (user-error "Command not specified.  Add a :command key"))
     (when (not (plist-get plist :type))
-      (error "Type not specified.  Add a :type key"))
+      (user-error "Type not specified.  Add a :type key"))
     (when (not (stringp (plist-get plist :type)))
-      (error "Type is not a string"))
+      (user-error "Type is not a string"))
     (when (not (member (plist-get plist :type) command-types))
-      (error "Unknown command type.  Consult `conner-command-types-alist' for available types"))
+      (user-error "Unknown command type.  Consult `conner-command-types-alist' for available types"))
     (when (not (or (stringp (plist-get plist :workdir))
                    (not (plist-get plist :workdir))))
-      (error "Workdir is not a string"))
+      (user-error "Workdir is not a string"))
     (when (not (or (listp (plist-get plist :environment))
                    (not (plist-get plist :environment))))
-      (error "Environment is not a list"))))
+      (user-error "Environment is not a list"))))
 
 (defun conner--pp-plist (plist)
   "Pretty print PLIST using line breaks after every value."
@@ -597,7 +597,7 @@ instead."
   (if (and command-list
        (conner--find-command-with-value
         :name (plist-get command-plist :name) command-list))
-      (error "A command with this name already exists"))
+      (user-error "A command with this name already exists"))
   (push command-plist command-list))
 
 (defun conner--delete-command-from-list (command-list command-plist)
