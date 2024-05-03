@@ -89,9 +89,9 @@ access to project files.
 
 ## Command types
 
-While Conner ships with the `compile`, `eat`, `vterm`, and `term`
-command types, you can define custom types tailored to your
-requirements. Adding a custom command type is straightforward:
+While Conner ships with a variety of command types already, you can
+define custom types tailored to your requirements. Adding a custom
+command type is straightforward:
 
 1. Define a function to execute the command.
 2. Register the function in `conner-command-types-alist`.
@@ -101,25 +101,23 @@ contains all the data saved in the Conner file, and the root
 directory. This directory corresponds to the directory with which
 `conner-run-command` was originally invoked.
 
-Below is an example of a custom command type for running commands in
-the [eat](https://codeberg.org/akib/emacs-eat) terminal. This is an
-old implementation:
+Below is an example of a command type that prints the command plist
+along with the root directory.
 
 ```emacs-lisp
-(defun conner--run-eat-command (plist &rest _)
-  "Run the command PLIST in an unique and interactive eat buffer."
-  (when (not (featurep 'eat))
-    (error "Eat is not installed or not loaded.  Aborting"))
-  (let* ((command-name (plist-get plist :name))
-         (eat-buffer-name (concat "*conner-eat-" command-name "*")))
-    (eat (conner-expand-command (plist-get plist :command)))))
+(defun my-conner-command-type-print (plist root-dir)
+  "Print command PLIST and ROOT-DIR."
+  (message "Command plist: %s\nRoot dir: %s" plist root-dir))
 
 (add-to-list 'conner-command-types-alist
-             `("eat" ,#'conner--run-eat-command))
+             `("print" ,#'my-conner-command-type-print))
 ```
 
-Do make sure to call `conner-expand-command` before running the
-command to ensure each format spec gets expanded as needed.
+You will then be able to define commands with type `print`.
+
+Do make sure to use the result of `conner-expand-command` as the
+command to run to ensure each format specifier gets expanded. If not
+applicable to your command, it can of course be omitted.
 
 ## Acknowledgments
 
