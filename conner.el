@@ -613,11 +613,17 @@ instead."
     updated-list))
 
 (defun conner--run-compile-command (plist &rest _)
-  "Run the command PLIST in an unique compilation buffer."
+  "Run the command PLIST in an unique compilation buffer.
+
+Optional PLIST keys:
+
+* :comint When non-nil the compilation buffer will be run in
+  comint mode which makes it interactive."
   (let* ((command-name (plist-get plist :name))
+         (comint (plist-get plist :comint))
          (compilation-buffer-name-function
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
-    (compile (conner-expand-command (plist-get plist :command)))))
+    (compile (conner-expand-command (plist-get plist :command)) comint)))
 
 (defun conner--run-term-command (plist &rest _)
   "Run the command PLIST in an unique and interactive term buffer.
