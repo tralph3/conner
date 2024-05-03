@@ -36,6 +36,19 @@ Conner is configurable, so you can add your own command types if
 what's available doesn't quite suit your needs.
 
 
+## Features
+
+- Integrated command editor which streamlines the experience.
+- Project aware thanks to `project.el` integration.
+- Allows for custom command runners.
+- Format specifiers let you get information at run-time.
+- Loading of env variables via `.env` files.
+- Per-command environment overrides.
+- Change working directory.
+- Meta command type allows for complex setups.
+- User-facing functions for CRUD operations on commands.
+
+
 ## Usage
 
 To add a command, simply execute `M-x conner-add-project-command` or
