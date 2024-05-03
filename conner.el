@@ -93,6 +93,7 @@ local file by default, and you will need to pass
 (defcustom conner-command-types-alist
   `(("compile" ,#'conner--run-compile-command)
     ("elispf" ,#'conner--run-elispf-command)
+    ("meta" ,#'conner--run-meta-command)
     ("term" ,#'conner--run-term-command)
     ("eat" ,#'conner--run-eat-command)
     ("vterm" ,#'conner--run-vterm-command))
@@ -608,10 +609,24 @@ instead."
           (lambda (_) (concat "*conner-compilation-" command-name "*"))))
     (compile (conner-expand-command (plist-get plist :command)))))
 
+(defun conner--run-term-command (plist &rest _)
+  "Run the command PLIST in an unique and interactive term buffer.
+
+The command is interpreted by bash."
+  (let* ((command-name (plist-get plist :name))
+         (buffer-name (concat "*conner-term-" command-name "*"))
+         (buffer (get-buffer-create buffer-name))
+         (command (conner-expand-command (plist-get plist :command))))
+    (switch-to-buffer buffer)
+    (term-mode)
+    (term-exec buffer command-name "bash" nil `("-c" ,command))))
+
 (defun conner--run-eat-command (plist &rest _)
   "Run the command PLIST in an unique and interactive eat buffer.
 
-If eat is not loaded, fallback on term instead."
+If eat is not loaded, fallback on term instead.
+
+The command is interpreted by bash."
   (if (not (featurep 'eat))
       (conner--run-term-command plist)
     (progn
@@ -623,20 +638,12 @@ If eat is not loaded, fallback on term instead."
         (eat-mode)
         (eat-exec buffer command-name "bash" nil `("-c" ,command))))))
 
-(defun conner--run-term-command (plist &rest _)
-  "Run the command PLIST in an unique and interactive term buffer."
-  (let* ((command-name (plist-get plist :name))
-         (buffer-name (concat "*conner-term-" command-name "*"))
-         (buffer (get-buffer-create buffer-name))
-         (command (conner-expand-command (plist-get plist :command))))
-    (switch-to-buffer buffer)
-    (term-mode)
-    (term-exec buffer command-name "bash" nil `("-c" ,command))))
-
 (defun conner--run-vterm-command (plist &rest _)
   "Run the command PLIST in an unique and interactive vterm buffer.
 
-If vterm is not loaded, fallback on term instead."
+If vterm is not loaded, fallback on term instead.
+
+The command is interpreted by bash."
   (if (not (featurep 'vterm))
       (conner--run-term-command plist)
     (progn
@@ -652,11 +659,33 @@ If vterm is not loaded, fallback on term instead."
         (vterm-mode)))))
 
 (defun conner--run-elispf-command (plist &rest _)
-  "Run the command PLIST as an Emacs lisp function.
+  "Run the command PLIST as an Emacs Lisp function.
 
 The function takes no arguments."
   (let ((command (plist-get plist :command)))
     (funcall command)))
+
+(defun conner--run-meta-command (plist root-dir)
+  "Run all the commands in PLIST at once in ROOT-DIR.
+
+The command must be a list of strings consisting of the names of
+the other commands you want to run.
+
+Commands will be run sequentally, but since most command types
+are async, it won't wait for them to finish before running the
+next one.  If a command type (such as elispf) is synchronous,
+then it must finish before calling the next command.
+
+Format specifiers are supported for each string in the list.
+Read `conner-expand-command' for details.
+
+WARNING.  You can include in your command list another meta
+command, or even the same one.  You can create an endless loop
+like this.  No checks are in place to prevent it."
+  (let ((commands (plist-get plist :command)))
+    (dolist (command-name commands)
+      (conner-run-command root-dir (conner-expand-command command-name)))))
+
 
 (provide 'conner)
 
