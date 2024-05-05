@@ -311,7 +311,7 @@ is the key and cdr is the value."
   "Read env vars of PLIST's :environment and return list of strings."
   (with-temp-buffer
     (dolist (elem (plist-get plist :environment))
-      (insert (concat elem "\n")))
+      (insert elem "\n"))
     (let ((env-vars (conner--get-env-vars-in-buffer)))
       (conner--construct-env-var-list env-vars))))
 
