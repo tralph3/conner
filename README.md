@@ -1,4 +1,5 @@
 [![tests](https://github.com/tralph3/conner/actions/workflows/tests.yml/badge.svg)](https://github.com/tralph3/conner/actions/workflows/tests.yml)
+[![MELPA](https://melpa.org/packages/conner-badge.svg)](https://melpa.org/#/conner)
 
 
 # Conner
@@ -35,6 +36,22 @@ Emacs session.
 Conner is configurable, so you can add your own command types if
 what's available doesn't quite suit your needs.
 
+
+## Installation
+
+Conner can be installed from [MELPA](https://melpa.org/#/conner). If
+you don't know how to use this repository go
+[here](https://melpa.org/#/getting-started) for instructions.
+
+It comes with no keybindings by default, so I recommend to add some to
+make it easier to use. This is my personal config at the time of
+writing.
+
+```emacs-lisp
+(use-package conner
+  :ensure t
+  :bind (("C-x p c" . conner-run-project-command)))
+```
 
 ## Features
 
