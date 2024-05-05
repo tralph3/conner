@@ -641,6 +641,8 @@ Optional PLIST keys:
   "Run the command PLIST in an unique and interactive term buffer.
 
 The command is interpreted by bash."
+  (declare-function term-exec "ext:term.el")
+  (declare-function term-mode "ext:term.el" nil)
   (let* ((command-name (plist-get plist :name))
          (buffer-name (concat "*conner-term-" command-name "*"))
          (buffer (get-buffer-create buffer-name))
@@ -658,6 +660,8 @@ The command is interpreted by bash."
   (if (not (featurep 'eat))
       (conner--run-term-command plist)
     (progn
+      (declare-function eat-exec "ext:eat.el")
+      (declare-function eat-mode "ext:eat.el" nil)
       (let* ((command-name (plist-get plist :name))
              (buffer-name (concat "*conner-eat-" command-name "*"))
              (buffer (get-buffer-create buffer-name))
@@ -675,6 +679,9 @@ The command is interpreted by bash."
   (if (not (featurep 'vterm))
       (conner--run-term-command plist)
     (progn
+      (defvar vterm-kill-buffer-on-exit)
+      (defvar vterm-shell)
+      (declare-function vterm-mode "ext:vterm.el" nil)
       (let* ((command-name (plist-get plist :name))
              (buffer-name (concat "*conner-vterm-" command-name "*"))
              (buffer (get-buffer buffer-name))
