@@ -110,6 +110,15 @@ been called.  You can use `plist-get' to fetch data from it.
                   (string :tag "Type name")
                   (function :tag "Handler function"))))
 
+(defcustom conner-use-navigation-in-command-edit t
+  "Whether TAB should be bound when using `conner--edit-command'.
+
+If non-nil, whenever you are editing a Conner command, TAB and
+S-TAB will be bound to `conner--edit-move-to-next-command' and
+`conner--edit-move-to-prev-command' respectively.  You can
+disable this behavior by setting this to nil."
+  :type 'boolean)
+
 (defvar conner--env-var-regexp
   (rx
    line-start
@@ -406,12 +415,15 @@ command is returned."
                                          (interactive)
                                          (kill-buffer)
                                          (abort-recursive-edit)))
-    (define-key keymap (kbd "<tab>") #'conner--edit-move-to-next-command)
-    (define-key keymap (kbd "<backtab>") #'conner--edit-move-to-prev-command)
+    (when conner-use-navigation-in-command-edit
+      (define-key keymap (kbd "<tab>") #'conner--edit-move-to-next-command)
+      (define-key keymap (kbd "<backtab>") #'conner--edit-move-to-prev-command))
     (insert (conner--pp-plist (or command conner--command-template)))
     (goto-char (point-min))
     (conner--edit-move-to-next-command)
-    (setq header-line-format "Submit with ‘C-c C-c’ or abort with ‘C-c C-k’. Use ‘<tab>‘ and ‘<backtab>‘ to navigate.")
+    (if conner-use-navigation-in-command-edit
+        (setq header-line-format "Submit with ‘C-c C-c’ or abort with ‘C-c C-k’. Use ‘<tab>‘ and ‘<backtab>‘ to navigate.")
+      (setq header-line-format "Submit with ‘C-c C-c’ or abort with ‘C-c C-k’."))
     (use-local-map keymap)
     (recursive-edit)
     (goto-char (point-min))
