@@ -61,7 +61,7 @@ writing.
 - Project aware thanks to `project.el` integration.
 - Allows for custom command runners.
 - Format specifiers let you get information at run-time.
-- Loading of env variables via `.env` files.
+- Loading of environment variables via `.env` files.
 - Per-command environment overrides.
 - Change working directory.
 - Meta command type allows for complex setups.
@@ -88,13 +88,13 @@ your command. These are the available keys:
   command. The directory is relative to the root directory of the
   project. Must be a string.
 - `:environment` List of strings containing environment variables in
-  the form of "KEY=value". These variables will be accesible to the
+  the form of "KEY=value". These variables will be accessible to the
   command they are declared in only. Must be a list.
 
 Note that `:name`, `:command`, and `:type` are the only keys that must
 be defined. The rest are optional. If you wish to not provide a value,
-you must either provide `nil` or remove them altogheter. A key with an
-emtpy value is not a valid plist.
+you must either provide `nil` or remove them altogether. A key with an
+empty value is not a valid plist.
 
 Once defined, run the command using `M-x conner-run-project-command`
 or `M-x conner-run-command`.
