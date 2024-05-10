@@ -99,6 +99,13 @@ empty value is not a valid plist.
 Once defined, run the command using `M-x conner-run-project-command`
 or `M-x conner-run-command`.
 
+Command runners can also support their own keys. For instance, the
+`compile` runner supports the `:comint` key, which when non-nil, runs
+the compilation buffer in [comint
+mode](https://www.emacswiki.org/emacs/ComintMode), allowing to pass
+user input to the running process. These optional keys are documented
+in the help buffer for each runner.
+
 
 ## Local Conner files
 
