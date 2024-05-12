@@ -66,7 +66,7 @@
   :type 'string)
 
 (defcustom conner-read-env-file t
-  "Wether to read env files before running commands.
+  "Whether to read env files before running commands.
 
 If non-nil, conner will look for a `conner-env-file' in the provided
 root dir and load any environment variables within, passing them to
@@ -250,7 +250,7 @@ Write to ROOT-DIR's `conner-file-name' by default.
 If invoked with \\[universal-argument], write to ROOT-DIR's
 associated local file.
 
-This logic is inversed if `conner-default-file-behavior' is set
+This logic is inverted if `conner-default-file-behavior' is set
 to `local'."
   (let ((conner-file (if (or
                           (and current-prefix-arg (eq conner-default-file-behavior 'project))
@@ -357,7 +357,7 @@ If PLIST-LIST is non-nil, search it instead."
   (mapcar (lambda (plist) (plist-get plist :name)) conner--commands))
 
 (defun conner--command-annotation-function (candidate)
-  "Get CANDIDATE's command and format for use in minibuffer annotation."
+  "Get CANDIDATE's command and format for use in mini buffer annotation."
   (let* ((max-width (apply #'max (mapcar #'length (conner--get-command-names))))
          (indent (make-string (- max-width (length candidate)) ?\s))
          (command (car
@@ -525,7 +525,7 @@ Write to ROOT-DIR's `conner-file-name' by default.  If invoked
 with \\[universal-argument], write to a local file associated
 with ROOT-DIR.
 
-This logic is inversed if `conner-default-file-behavior' is set
+This logic is inverted if `conner-default-file-behavior' is set
 to `local'."
   (interactive "D")
   (when command-plist
@@ -552,7 +552,7 @@ Write to ROOT-DIR's `conner-file-name' by default.  If invoked
 with \\[universal-argument], write to a local file associated
 with ROOT-DIR.
 
-This logic is inversed if `conner-default-file-behavior' is set
+This logic is inverted if `conner-default-file-behavior' is set
 to `local'."
   (interactive "D")
   (if (or
@@ -577,7 +577,7 @@ Command will be read from ROOT-DIR's `conner-file-name' by
 default.  If invoked with \\[universal-argument], read from a
 local file associated with ROOT-DIR.
 
-This logic is inversed if `conner-default-file-behavior' is set
+This logic is inverted if `conner-default-file-behavior' is set
 to `local'.
 
 The user will be prompted for every optional parameter not
@@ -706,7 +706,7 @@ The function takes no arguments."
 The command must be a list of strings consisting of the names of
 the other commands you want to run.
 
-Commands will be run sequentally, but since most command types
+Commands will be run sequentially, but since most command types
 are async, it won't wait for them to finish before running the
 next one.  If a command type (such as elispf) is synchronous,
 then it must finish before calling the next command.
