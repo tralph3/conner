@@ -47,13 +47,17 @@ you don't know how to use this repository go
 
 It comes with no keybindings by default, so I recommend to add some to
 make it easier to use. This is my personal config at the time of
-writing.
+writing:
 
 ```emacs-lisp
 (use-package conner
   :ensure t
-  :bind (("C-x p c" . conner-run-project-command)))
+  :bind (([remap project-compile] . conner-run-project-command)))
 ```
+
+The code above binds `conner-run-project-command` to the key used for
+`project-compile` (`C-x p c` by default) thereby replacing the latter
+by the former.
 
 ## Features
 
