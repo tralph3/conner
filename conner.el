@@ -268,6 +268,17 @@ to `local'."
         (insert (conner--pp-plist-list conner--commands))
         (write-file conner-file)))))
 
+(defun conner--plist-keys (plist)
+  "Get keys of a plist."
+  (cl-loop for (k _v) on plist by #'cddr collect k))
+
+(defun conner--clean-command-plist (plist)
+  "Remove any keys in PLIST with nil values."
+  (dolist (key (conner--plist-keys plist))
+    (when (eq nil (plist-get plist key))
+      (cl-remf plist key)))
+  plist)
+
 (defun conner-expand-command (command)
   "Expand COMMAND's specs to their final values.
 
@@ -434,7 +445,7 @@ command is returned."
     (let ((contents (read (current-buffer))))
       (kill-buffer)
       (conner--validate-command-plist contents)
-      contents)))
+      (conner--clean-command-plist contents))))
 
 ;;;###autoload
 (defun conner-run-project-command (&optional project)

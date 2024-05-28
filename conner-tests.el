@@ -207,3 +207,7 @@
    (conner-add-command conner-root-dir '(:name "Run me" :command "now" :type "compile" :hook func-hook-test))
    (conner-run-command conner-root-dir "Run me")
    (should (eq 69 hook-test-value))))
+
+(ert-deftest conner-test-clean-command ()
+  (with-temp-env
+   (should (equal (conner--clean-command-plist '(:hook nil :name "some command" :workdir nil)) '(:name "some command")))))
