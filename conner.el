@@ -269,7 +269,7 @@ to `local'."
         (write-file conner-file)))))
 
 (defun conner--plist-keys (plist)
-  "Get keys of a plist."
+  "Get keys of plist PLIST."
   (cl-loop for (k _v) on plist by #'cddr collect k))
 
 (defun conner--clean-command-plist (plist)
