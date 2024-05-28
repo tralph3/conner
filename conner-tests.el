@@ -195,5 +195,15 @@
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "invalidtype")))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :workdir notstring)))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :environment notlist)))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :hook "not a symbol!")))
    (should (eq (conner--validate-command-plist '(:name "name" :command symbol :type "compile")) nil))
    (should (eq (conner--validate-command-plist '(:name "name" :command "test" :type "compile")) nil))))
+
+(ert-deftest conner-test-hooks ()
+  (with-temp-env
+   (setq-local hook-test-value 42)
+   (defun func-hook-test ()
+     (setq-local hook-test-value 69))
+   (conner-add-command conner-root-dir '(:name "Run me" :command "now" :type "compile" :hook func-hook-test))
+   (conner-run-command conner-root-dir "Run me")
+   (should (eq 69 hook-test-value))))

@@ -2,7 +2,7 @@
 
 ;; Authors: Tomás Ralph <tomasralph2000@gmail.com>
 ;; Created: 2024
-;; Version: 0.4
+;; Version: 0.5
 ;; Package-Requires: ((emacs "29.1"))
 ;; Homepage: https://github.com/tralph3/conner
 ;; Keywords: tools
@@ -172,7 +172,10 @@ disable this behavior by setting this to nil."
       (user-error "Workdir is not a string"))
     (when (not (or (listp (plist-get plist :environment))
                    (not (plist-get plist :environment))))
-      (user-error "Environment is not a list"))))
+      (user-error "Environment is not a list"))
+    (when (not (or (symbolp (plist-get plist :hook))
+                   (not (plist-get plist :hook))))
+      (user-error "Hook is not a symbol"))))
 
 (defun conner--pp-plist (plist)
   "Pretty print PLIST using line breaks after every value."
@@ -510,8 +513,11 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
          (process-environment (append (conner--read-command-env-vars plist) process-environment))
          (command-type (plist-get plist :type))
          (command-workdir (plist-get plist :workdir))
+         (command-hook (plist-get plist :hook))
          (command-func (cadr (assoc command-type conner-command-types-alist)))
          (default-directory (file-name-concat root-dir command-workdir)))
+    (when (functionp command-hook)
+      (funcall command-hook))
     (funcall command-func plist root-dir)))
 
 ;;;###autoload
