@@ -90,6 +90,8 @@ your command. These are the available keys:
 - `:environment` List of strings containing environment variables in
   the form of "KEY=value". These variables will be accessible to the
   command they are declared in only. Must be a list.
+- `:hook` Function called with no arguments just before running the
+  command.
 
 Note that `:name`, `:command`, and `:type` are the only keys that must
 be defined. The rest are optional. If you wish to not provide a value,

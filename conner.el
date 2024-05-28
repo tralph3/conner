@@ -143,7 +143,8 @@ disable this behavior by setting this to nil."
                                          :command "The command to run"
                                          :type "See available types in `conner-command-types-alist'"
                                          :workdir nil
-                                         :environment nil)
+                                         :environment nil
+                                         :hook nil)
   "Command template that's presented to the user when adding a new command.")
 
 (defun conner--construct-file-path (root-dir)
