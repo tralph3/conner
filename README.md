@@ -92,6 +92,8 @@ your command. These are the available keys:
   command they are declared in only. Must be a list.
 - `:hook` Function called with no arguments just before running the
   command.
+- `:silent` If non-nil, Conner will prevent the creation of new
+  windows, running the command in the background instead.
 
 Note that `:name`, `:command`, and `:type` are the only keys that must
 be defined. The rest are optional. If you wish to not provide a value,
