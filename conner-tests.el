@@ -39,6 +39,14 @@
   (should (equal default-directory
                  (file-name-concat root-dir (plist-get plist :workdir)))))
 
+(defun fake-func-check-display-buffer-alist (&optional is-silent)
+  (let ((are-equal (equal (car display-buffer-alist) '("\\*conner-.*"
+                                                       (display-buffer-no-window)
+                                                       (allow-no-window . t)))))
+    (if is-silent
+        (should are-equal)
+      (should-not are-equal))))
+
 (ert-deftest conner-test-add-command ()
   (with-temp-env
    (conner-add-command conner-root-dir '(:name "New command" :command "echo \"test\"" :type "compile"))
@@ -198,6 +206,7 @@
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :workdir notstring)))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :environment notlist)))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :hook "not a symbol!")))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :silent "not a boolean")))
    (should (eq (conner--validate-command-plist '(:name "name" :command symbol :type "compile")) nil))
    (should (eq (conner--validate-command-plist '(:name "name" :command "test" :type "compile")) nil))))
 
@@ -213,3 +222,10 @@
 (ert-deftest conner-test-clean-command ()
   (with-temp-env
    (should (equal (conner--clean-command-plist '(:hook nil :name "some command" :workdir nil)) '(:name "some command")))))
+
+(ert-deftest conner-test-silent-command ()
+  (with-temp-env
+   (conner-add-command conner-root-dir '(:name "Silent command" :command (lambda () (fake-func-check-display-buffer-alist t)) :type "elispf" :silent t))
+   (conner-add-command conner-root-dir '(:name "Normal command" :command fake-func-check-display-buffer-alist :type "elispf"))
+   (conner-run-command conner-root-dir "Silent command")
+   (conner-run-command conner-root-dir "Normal command")))
