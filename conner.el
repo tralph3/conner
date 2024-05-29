@@ -144,7 +144,8 @@ disable this behavior by setting this to nil."
                                          :type "See available types in `conner-command-types-alist'"
                                          :workdir nil
                                          :environment nil
-                                         :hook nil)
+                                         :hook nil
+                                         :silent nil)
   "Command template that's presented to the user when adding a new command.")
 
 (defun conner--construct-file-path (root-dir)
@@ -176,7 +177,9 @@ disable this behavior by setting this to nil."
       (user-error "Environment is not a list"))
     (when (not (or (symbolp (plist-get plist :hook))
                    (not (plist-get plist :hook))))
-      (user-error "Hook is not a symbol"))))
+      (user-error "Hook is not a symbol"))
+    (when (not (booleanp (plist-get plist :silent)))
+      (user-error "Silent is not a boolean"))))
 
 (defun conner--pp-plist (plist)
   "Pretty print PLIST using line breaks after every value."
@@ -446,6 +449,9 @@ command is returned."
       (kill-buffer)
       (conner--validate-command-plist contents)
       (conner--clean-command-plist contents))))
+    (pop-to-buffer buffer)
+    (with-current-buffer buffer
+        (conner--clean-command-plist contents)))))
 
 ;;;###autoload
 (defun conner-run-project-command (&optional project)
@@ -526,8 +532,18 @@ If `conner-read-env-file' is non-nil, it will read ROOT-DIR's
          (command-type (plist-get plist :type))
          (command-workdir (plist-get plist :workdir))
          (command-hook (plist-get plist :hook))
+         (command-silent (plist-get plist :silent))
          (command-func (cadr (assoc command-type conner-command-types-alist)))
-         (default-directory (file-name-concat root-dir command-workdir)))
+         (default-directory (file-name-concat root-dir command-workdir))
+         ;; If the command should be silent, we add a rule to not
+         ;; display a window for any buffer whose name starts with
+         ;; Conner.
+         (display-buffer-alist (if command-silent
+                                   (cons '("\\*conner-.*"
+                                           (display-buffer-no-window)
+                                           (allow-no-window . t))
+                                         display-buffer-alist)
+                                 display-buffer-alist)))
     (when (functionp command-hook)
       (funcall command-hook))
     (funcall command-func plist root-dir)))
@@ -665,7 +681,7 @@ The command is interpreted by bash."
          (buffer-name (concat "*conner-term-" command-name "*"))
          (buffer (get-buffer-create buffer-name))
          (command (conner-expand-command (plist-get plist :command))))
-    (switch-to-buffer buffer)
+    (pop-to-buffer buffer)
     (term-mode)
     (term-exec buffer command-name "bash" nil `("-c" ,command))))
 
@@ -684,9 +700,10 @@ The command is interpreted by bash."
              (buffer-name (concat "*conner-eat-" command-name "*"))
              (buffer (get-buffer-create buffer-name))
              (command (conner-expand-command (plist-get plist :command))))
-        (switch-to-buffer buffer)
-        (eat-mode)
-        (eat-exec buffer command-name "bash" nil `("-c" ,command))))))
+        (pop-to-buffer buffer)
+        (with-current-buffer buffer
+          (eat-mode)
+          (eat-exec buffer command-name "bash" nil `("-c" ,command)))))))
 
 (defun conner--run-vterm-command (plist &rest _)
   "Run the command PLIST in an unique and interactive vterm buffer.
@@ -708,8 +725,10 @@ The command is interpreted by bash."
              (vterm-shell (concat "bash -c '" command ";exit'")))
         (when buffer
           (kill-buffer buffer))
-        (switch-to-buffer (generate-new-buffer buffer-name))
-        (vterm-mode)))))
+        (let ((buffer (generate-new-buffer buffer-name)))
+          (pop-to-buffer buffer)
+          (with-current-buffer buffer
+            (vterm-mode)))))))
 
 (defun conner--run-elispf-command (plist &rest _)
   "Run the command PLIST as an Emacs Lisp function.
