@@ -468,6 +468,10 @@ command is returned."
 
 PROJECT is either a path to a project if `conner-project-backend'
 is `projectile', or a project object if using `project.el'."
+  (declare-function projectile-relevant-known-projects "ext:projectile.el" nil)
+  (declare-function projectile-project-p "ext:projectile.el" nil)
+  (declare-function projectile-completing-read "ext:projectile.el" _ _)
+  (declare-function projectile-project-root "ext:projectile.el" _)
   (cond
    ((equal conner-project-backend 'projectile)
     (let* ((projects (projectile-relevant-known-projects))
