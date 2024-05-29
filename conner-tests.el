@@ -6,10 +6,12 @@
           (conner-env-path (file-name-concat conner-root-dir conner-env-file))
           (user-emacs-directory conner-root-dir)
           (conner-local-file-path (conner--construct-local-file-path "/tmp")))
-     ,@forms
-     (delete-file conner-file-path)
-     (delete-file conner-env-path)
-     (delete-directory "/tmp/conner" t)))
+     (unwind-protect
+         ,@forms
+       (progn
+         (delete-file conner-file-path)
+         (delete-file conner-env-path)
+         (delete-directory "/tmp/conner" t)))))
 
 (defun pollute-env-file ()
   (with-temp-buffer
