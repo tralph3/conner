@@ -229,3 +229,13 @@
    (conner-add-command conner-root-dir '(:name "Normal command" :command fake-func-check-display-buffer-alist :type "elispf"))
    (conner-run-command conner-root-dir "Silent command")
    (conner-run-command conner-root-dir "Normal command")))
+
+(ert-deftest conner-test-project-backend ()
+  (with-temp-env
+   (let ((conner-project-backend 'projectile))
+     (defun projectile-project-root (root-dir)
+       root-dir)
+     (defun projectile-relevant-known-projects ())
+     (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) "/test"))
+   (let ((conner-project-backend 'project.el))
+     (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) '(vc Git "/test")))))
