@@ -119,6 +119,16 @@ S-TAB will be bound to `conner--edit-move-to-next-command' and
 disable this behavior by setting this to nil."
   :type 'boolean)
 
+(defcustom conner-project-backend (if (featurep 'projectile)
+                                      'projectile
+                                    'project.el)
+  "What project backend to use.
+
+If Projectile is available, it defaults to it.  Otherwise, it uses
+`project.el'."
+  :type '(choice (const :tag "project.el" project.el)
+                 (const :tag "Projectile" projectile)))
+
 (defvar conner--env-var-regexp
   (rx
    line-start
@@ -453,57 +463,73 @@ command is returned."
         (conner--validate-command-plist contents)
         (conner--clean-command-plist contents)))))
 
+(defun conner--act-on-project (func &optional project)
+  "Gets root dir of PROJECT and run FUNC with it.
+
+PROJECT is either a path to a project if `conner-project-backend'
+is `projectile', or a project object if using `project.el'."
+  (cond
+   ((equal conner-project-backend 'projectile)
+    (let* ((projects (projectile-relevant-known-projects))
+           (project (or project
+                        (projectile-project-p)
+                        (projectile-completing-read
+                           "Select project: " projects)))
+           (root-dir (projectile-project-root project)))
+      (funcall func root-dir)))
+   ((equal conner-project-backend 'project.el)
+    (let* ((project (or project (project-current t)))
+           (root-dir (project-root project)))
+      (funcall func root-dir)))
+   (t (error "Unknown project backend: %s" conner-project-backend))))
+
 ;;;###autoload
 (defun conner-run-project-command (&optional project)
   "Project aware variant of `conner-run-command'.
 
-Will use PROJECT's root dir as an argument for the corresponding
-function.
+PROJECT is either a path to a project if `conner-project-backend'
+is `projectile', or a project object if using `project.el'.
 
-If no PROJECT is provided, it will use the value of
-`project-current'.  If nil, it will prompt the user."
+If not PROJECT is provided, use current project.  If nil, prompt
+the user."
   (interactive)
-  (let ((project (or project (project-current t))))
-    (conner-run-command (project-root project))))
+  (conner--act-on-project #'conner-run-command project))
 
 ;;;###autoload
 (defun conner-add-project-command (&optional project)
   "Project aware variant of `conner-add-command'.
 
-Will use PROJECT's root dir as an argument for the corresponding
-function.
+PROJECT is either a path to a project if `conner-project-backend'
+is `projectile', or a project object if using `project.el'.
 
-If no PROJECT is provided, it will use the value of
-`project-current'.  If nil, it will prompt the user."
+If not PROJECT is provided, use current project.  If nil, prompt
+the user."
   (interactive)
-  (let ((project (or project (project-current t))))
-    (conner-add-command (project-root project))))
+  (conner--act-on-project #'conner-add-command project))
 
 ;;;###autoload
 (defun conner-delete-project-command (&optional project)
   "Project aware variant of `conner-delete-command'.
 
-Will use PROJECT's root dir as an argument for the corresponding
-function.
+PROJECT is either a path to a project if `conner-project-backend'
+is `projectile', or a project object if using `project.el'.
 
-If no PROJECT is provided, it will use the value of
-`project-current'.  If nil, it will prompt the user."
+If not PROJECT is provided, use current project.  If nil, prompt
+the user."
   (interactive)
-  (let ((project (or project (project-current t))))
-    (conner-delete-command (project-root project))))
+  (conner--act-on-project #'conner-delete-command project))
 
 ;;;###autoload
 (defun conner-update-project-command (&optional project)
   "Project aware variant of `conner-update-command'.
 
-Will use PROJECT's root dir as an argument for the corresponding
-function.
+PROJECT is either a path to a project if `conner-project-backend'
+is `projectile', or a project object if using `project.el'.
 
-If no PROJECT is provided, it will use the value of
-`project-current'.  If nil, it will prompt the user."
+If not PROJECT is provided, use current project.  If nil, prompt
+the user."
   (interactive)
-  (let ((project (or project (project-current t))))
-    (conner-update-command (project-root project))))
+  (conner--act-on-project #'conner-update-command project))
 
 ;;;###autoload
 (defun conner-run-command (root-dir &optional command-name)
