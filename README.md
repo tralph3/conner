@@ -25,9 +25,9 @@ root of your project. Inside this file, you'll define a Lisp object
 containing a list of command names, their respective commands, and
 their types.
 
-Integration with `project.el` enables seamless execution of these
-commands within Emacs, either on arbitrary directories or
-automatically detecting the current project's root.
+Integration with `project.el` and `projectile` enables seamless
+execution of these commands within Emacs, either on arbitrary
+directories or automatically detecting the current project's root.
 
 Additionally, Conner also has support for `.env` files. By default,
 Conner will look in the root directory of your project for a `.env`
@@ -58,7 +58,7 @@ writing.
 ## Features
 
 - Integrated command editor which streamlines the experience.
-- Project aware thanks to `project.el` integration.
+- Project aware thanks to `project.el` and `projectile` integration.
 - Allows for custom command runners.
 - Format specifiers let you get information at run-time.
 - Loading of environment variables via `.env` files.
