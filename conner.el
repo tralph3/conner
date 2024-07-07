@@ -185,9 +185,9 @@ If Projectile is available, it defaults to it.  Otherwise, it uses
     (when (not (or (listp (plist-get plist :environment))
                    (not (plist-get plist :environment))))
       (user-error "Environment is not a list"))
-    (when (not (or (symbolp (plist-get plist :hook))
+    (when (not (or (functionp (plist-get plist :hook))
                    (not (plist-get plist :hook))))
-      (user-error "Hook is not a symbol"))
+      (user-error "Hook is not a function"))
     (when (not (booleanp (plist-get plist :silent)))
       (user-error "Silent is not a boolean"))))
 

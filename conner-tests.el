@@ -205,10 +205,12 @@
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "invalidtype")))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :workdir notstring)))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :environment notlist)))
-   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :hook "not a symbol!")))
+   (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :hook "not a function!")))
    (should-error (conner--validate-command-plist '(:name "name" :command "test" :type "compile" :silent "not a boolean")))
    (should (eq (conner--validate-command-plist '(:name "name" :command symbol :type "compile")) nil))
-   (should (eq (conner--validate-command-plist '(:name "name" :command "test" :type "compile")) nil))))
+   (should (eq (conner--validate-command-plist '(:name "name" :command "test" :type "compile")) nil))
+   (should (eq (conner--validate-command-plist '(:name "name" :command "hook symbol" :type "compile" :hook car)) nil))
+   (should (eq (conner--validate-command-plist '(:name "name" :command "hook lambda" :type "compile" :hook (lambda () t))) nil))))
 
 (ert-deftest conner-test-hooks ()
   (with-temp-env
