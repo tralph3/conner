@@ -9,9 +9,9 @@ Conner is a **Co**mmand Ru**nner** for GNU Emacs.
 ---
 
 > [!WARNING]
-> Conner is currently alpha software. Nothing is set in stone, so the
-> API or the .conner file format may change. As such, until I release
-> 1.0, I reserve the right to break configs.
+> I reserve the right to modify the API or the .conner file format
+> until I've gathered enough feedback from users to make sure it's
+> fine to make it stable. Configs *may*, eventually, break.
 
 https://github.com/tralph3/conner/assets/41462117/1bef5907-db95-43a8-9061-f191e50614a6
 
