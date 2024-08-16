@@ -194,6 +194,8 @@
    (let ((default-directory "/test/path"))
      (should (equal (conner-expand-command "Expand: %d. This does not: %%d. Escape percent: %%")
                     "Expand: /test/path. This does not: %d. Escape percent: %"))
+     (should (equal (conner-expand-command '("Supports" "Lists!!" "With %d dirs!"))
+                    "Supports && Lists!! && With /test/path dirs!"))
      (should-error (conner-expand-command "Non-existent specifier %z")))))
 
 (ert-deftest conner-test-validate-command ()

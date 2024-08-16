@@ -295,6 +295,9 @@ to `local'."
 (defun conner-expand-command (command)
   "Expand COMMAND's specs to their final values.
 
+If COMMAND is a list of strings, pass it to
+`conner--concat-command-list' and use the result.
+
 The spec is defined as follows:
 
 * %f: Filename from where the command was called.
@@ -317,6 +320,8 @@ Allowed flags are:
 * _: Convert to lower case.
 
 For more details read `format-spec'."
+  (when (listp command)
+    (setq command (conner--concat-command-list command)))
   (format-spec command
                `((?f . ,(file-name-nondirectory (or (buffer-file-name) "")))
                  (?F . ,(or (buffer-file-name) ""))
@@ -687,6 +692,13 @@ instead."
           (conner--add-command-to-list
            command-deleted new-command-plist)))
     updated-list))
+
+(defun conner--concat-command-list (command-list &optional separator)
+  "Concat all strings in COMMAND-LIST with SEPARATOR.
+
+If SEPARATOR is nil, default to \" && \"."
+  (let ((separator (or separator " && ")))
+    (mapconcat 'identity command-list separator)))
 
 (defun conner--run-compile-command (plist &rest _)
   "Run the command PLIST in an unique compilation buffer.
