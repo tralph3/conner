@@ -415,9 +415,10 @@ If PLIST-LIST is non-nil, search it instead."
                    (cl-remove-if #'string-blank-p
                                  (split-string
                                   (format "%s"
-                                          (plist-get
-                                           (conner--find-command-with-value :name candidate)
-                                           :command)) "\n"))))
+                                          (conner--concat-command-list
+                                           (plist-get
+                                            (conner--find-command-with-value :name candidate)
+                                            :command))) "\n"))))
          (tabs (make-string 6 ?\t)))
     (format "%s%s%s" indent tabs command)))
 
@@ -715,8 +716,10 @@ instead."
   "Concat all strings in COMMAND-LIST with SEPARATOR.
 
 If SEPARATOR is nil, default to \" && \"."
-  (let ((separator (or separator " && ")))
-    (mapconcat 'identity command-list separator)))
+  (if (stringp command-list)
+      command-list
+    (let ((separator (or separator " && ")))
+      (mapconcat 'identity command-list separator))))
 
 (defun conner--run-compile-command (plist &rest _)
   "Run the command PLIST in an unique compilation buffer.
