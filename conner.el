@@ -799,7 +799,9 @@ The command is interpreted by bash."
 
 The function takes no arguments."
   (let* ((command (plist-get plist :command))
-         (command (if (stringp command) (intern command) command)))
+         (command (if (stringp command)
+                      (intern command)
+                    command)))
     (funcall command)))
 
 (defun conner--run-meta-command (plist root-dir)
