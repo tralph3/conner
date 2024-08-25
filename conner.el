@@ -798,7 +798,8 @@ The command is interpreted by bash."
   "Run the command PLIST as an Emacs Lisp function.
 
 The function takes no arguments."
-  (let ((command (plist-get plist :command)))
+  (let* ((command (plist-get plist :command))
+         (command (if (stringp command) (intern command) command)))
     (funcall command)))
 
 (defun conner--run-meta-command (plist root-dir)
