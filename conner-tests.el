@@ -243,3 +243,20 @@
      (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) "/test"))
    (let ((conner-project-backend 'project.el))
      (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) '(vc Git "/test")))))
+
+(ert-deftest conner-test-pp-functions-error ()
+  (with-temp-env
+   (should-error (conner--pp-list "not a list"))
+   (should-error (conner--pp-plist "not a plist"))
+   (should-error (conner--pp-plist '("also" "not" "a plist")))
+   (should-error (conner--pp-plist-list "not a list"))))
+
+(ert-deftest conner-test-pp-functions-output ()
+  (with-temp-env
+   (should (equal (conner--pp-list '(a)) "(a)"))
+   (should (equal (conner--pp-list '(a b)) "(a\n b)"))
+   (should (equal (conner--pp-plist '(a b)) "(a b)"))
+   (should (equal (conner--pp-plist '(a b c d)) "(a b\n   c d)"))
+   (should (equal (conner--pp-plist-list '((a b c d))) "((a b\n    c d))"))
+   (should (equal (conner--pp-plist-list '((a b c d) (e f g h))) "((a b\n    c d)\n (e f\n    g h))"))
+   (should (equal (conner--pp-plist-list '((a b c d) (e f g (h i j k)))) "((a b\n    c d)\n (e f\n    g (h\n       i\n       j\n       k)))"))))
