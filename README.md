@@ -78,9 +78,9 @@ your command. These are the available keys:
   command. Most runners use it to name their buffers. Must be a
   string.
 - `:command` The command to run. Its interpretation will vary
-  depending on the runner. Most runners support format specifiers that
-  are calculated at runtime. Read `conner-expand-command` for
-  details. Must be defined.
+  depending on the runner. Most runners support strings (or a list of
+  strings) that can have format specifiers. These are calculated at
+  runtime. Read `conner-expand-command` for details. Must be defined.
 - `:type` The type decides which runner to call when executing the
   command. See `conner-command-types-alist` for available types. Must
   be a string.
