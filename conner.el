@@ -230,6 +230,8 @@ If Projectile is available, it defaults to it.  Otherwise, it uses
 
 (defun conner--pp-plist-list (plist-list)
   "Pretty print PLIST-LIST using line breaks."
+  (when (not (listp plist-list))
+    (error "Not a valid list"))
   (with-temp-buffer
     (let ((inhibit-message t)
           (message-log-max nil))
