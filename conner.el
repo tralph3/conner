@@ -490,7 +490,7 @@ command is returned."
         (conner--validate-command-plist contents)
         (conner--clean-command-plist contents)))))
 
-(defun conner--act-on-project (func &optional project)
+(defun conner--act-on-project (func &optional project &rest args)
   "Gets root dir of PROJECT and run FUNC with it.
 
 PROJECT is either a path to a project if `conner-project-backend'
@@ -507,60 +507,69 @@ is `projectile', or a project object if using `project.el'."
                         (projectile-completing-read
                            "Select project: " projects)))
            (root-dir (projectile-project-root project)))
-      (funcall func root-dir)))
+      (apply func root-dir args)))
    ((equal conner-project-backend 'project.el)
     (let* ((project (or project (project-current t)))
            (root-dir (project-root project)))
-      (funcall func root-dir)))
+      (apply func root-dir args)))
    (t (error "Unknown project backend: %s" conner-project-backend))))
 
 ;;;###autoload
-(defun conner-run-project-command (&optional project)
+(defun conner-run-project-command (&optional project command-name)
   "Project aware variant of `conner-run-command'.
 
 PROJECT is either a path to a project if `conner-project-backend'
 is `projectile', or a project object if using `project.el'.
 
-If not PROJECT is provided, use current project.  If nil, prompt
-the user."
+If no PROJECT is provided, use current project.  If nil, prompt
+the user.
+
+Refer to `conner-run-command' for usage of COMMAND-NAME."
   (interactive)
-  (conner--act-on-project #'conner-run-command project))
+  (conner--act-on-project #'conner-run-command project command-name))
 
 ;;;###autoload
-(defun conner-add-project-command (&optional project)
+(defun conner-add-project-command (&optional project command-plist)
   "Project aware variant of `conner-add-command'.
 
 PROJECT is either a path to a project if `conner-project-backend'
 is `projectile', or a project object if using `project.el'.
 
 If not PROJECT is provided, use current project.  If nil, prompt
-the user."
+the user.
+
+Refer to `conner-add-command' for usage of COMMAND-PLIST."
   (interactive)
-  (conner--act-on-project #'conner-add-command project))
+  (conner--act-on-project #'conner-add-command project command-plist))
 
 ;;;###autoload
-(defun conner-delete-project-command (&optional project)
+(defun conner-delete-project-command (&optional project command-name)
   "Project aware variant of `conner-delete-command'.
 
 PROJECT is either a path to a project if `conner-project-backend'
 is `projectile', or a project object if using `project.el'.
 
 If not PROJECT is provided, use current project.  If nil, prompt
-the user."
+the user.
+
+Refer to `conner-delete-command' for usage of COMMAND-NAME."
   (interactive)
-  (conner--act-on-project #'conner-delete-command project))
+  (conner--act-on-project #'conner-delete-command project command-name))
 
 ;;;###autoload
-(defun conner-update-project-command (&optional project)
+(defun conner-update-project-command (&optional project command-name new-command-plist)
   "Project aware variant of `conner-update-command'.
 
 PROJECT is either a path to a project if `conner-project-backend'
 is `projectile', or a project object if using `project.el'.
 
 If not PROJECT is provided, use current project.  If nil, prompt
-the user."
+the user.
+
+Refer to `conner-update-command' for usage of COMMAND-NAME and
+NEW-COMMAND-PLIST."
   (interactive)
-  (conner--act-on-project #'conner-update-command project))
+  (conner--act-on-project #'conner-update-command project command-name new-command-plist))
 
 ;;;###autoload
 (defun conner-run-command (root-dir &optional command-name)
@@ -741,8 +750,7 @@ Optional PLIST keys:
   "Run the command PLIST in an unique and interactive term buffer.
 
 The command is interpreted by bash."
-  (declare-function term-exec "ext:term.el")
-  (declare-function term-mode "ext:term.el" nil)
+  (require 'term)
   (let* ((command-name (plist-get plist :name))
          (buffer-name (concat "*conner-term-" command-name "*"))
          (buffer (get-buffer-create buffer-name))

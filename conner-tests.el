@@ -242,7 +242,9 @@
      (defun projectile-relevant-known-projects ())
      (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) "/test"))
    (let ((conner-project-backend 'project.el))
-     (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) '(vc Git "/test")))))
+     (conner--act-on-project (lambda (root-dir) (should (equal root-dir "/test"))) '(vc Git "/test")))
+   (let ((conner-project-backend 'unknown-backend))
+     (should-error (conner--act-on-project (lambda ()))))))
 
 (ert-deftest conner-test-pp-functions-error ()
   (with-temp-env
