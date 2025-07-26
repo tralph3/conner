@@ -762,10 +762,10 @@ The command is interpreted by bash."
 (defun conner--run-eat-command (plist &rest _)
   "Run the command PLIST in an unique and interactive eat buffer.
 
-If eat is not loaded, fallback on term instead.
+If eat is not available, fallback on term instead.
 
 The command is interpreted by bash."
-  (if (not (featurep 'eat))
+  (if (not (require 'eat nil t))
       (conner--run-term-command plist)
     (progn
       (declare-function eat-exec "ext:eat.el")
@@ -782,10 +782,10 @@ The command is interpreted by bash."
 (defun conner--run-vterm-command (plist &rest _)
   "Run the command PLIST in an unique and interactive vterm buffer.
 
-If vterm is not loaded, fallback on term instead.
+If vterm is not available, fallback on term instead.
 
 The command is interpreted by bash."
-  (if (not (featurep 'vterm))
+  (if (not (require 'vterm nil t))
       (conner--run-term-command plist)
     (progn
       (defvar vterm-kill-buffer-on-exit)
