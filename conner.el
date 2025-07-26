@@ -470,7 +470,8 @@ command is returned."
       (define-key keymap (kbd "C-c C-k") (lambda ()
                                            (interactive)
                                            (kill-buffer)
-                                           (delete-window)
+                                           (when (not (one-window-p))
+                                             (delete-window))
                                            (abort-recursive-edit)))
       (when conner-use-navigation-in-command-edit
         (define-key keymap (kbd "<tab>") #'conner--edit-move-to-next-command)
@@ -486,7 +487,8 @@ command is returned."
       (goto-char (point-min))
       (let ((contents (read (current-buffer))))
         (kill-buffer)
-        (delete-window)
+        (when (not (one-window-p))
+          (delete-window))
         (conner--validate-command-plist contents)
         (conner--clean-command-plist contents)))))
 
