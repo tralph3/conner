@@ -7,7 +7,7 @@ jobs:
     - uses: purcell/setup-emacs@master
       with:
         version: 29.1
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Run tests
       run: |
         emacs -Q -batch -l ert -l conner.el -l conner-tests.el -f ert-run-tests-batch-and-exit
